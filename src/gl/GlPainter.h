@@ -14,6 +14,8 @@ public:
     void setColor(const QColor &color);
     void line(int x1, int y1, int x2, int y2);
     void line(const QPoint& start, const QPoint& end);
+
+    QPainter* qPainter() {return painter;}
 };
 
 

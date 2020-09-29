@@ -5,24 +5,29 @@
 #include <QtGui/QPainter>
 #include "../obj/ObjModel.h"
 #include "GlPainter.h"
+#include "Camera.h"
 
 
 class Scene : public QObject {
     Q_OBJECT
 
 private:
-    const QString modelPath = "Head/Model.obj";
+    const QString modelPath = "Diablo/Model.obj";
 
     QList<ObjModel*> models;
     GlPainter painter;
     int width;
     int height;
 
+    Camera* camera;
+
     void paintModel(ObjModel* model);
+
+public slots:
+    void repaint();
 
 public:
     explicit Scene(int width, int height, QObject *parent);
-    void repaint();
 
     void setPainter(QPainter* qPainter);
 
@@ -30,7 +35,12 @@ public:
 
     void setHeight(int height);
 
+    void setCamera(Camera* camera);
+
     ~Scene() override;
+
+private:
+    void debugPrint();
 };
 
 

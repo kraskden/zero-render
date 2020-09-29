@@ -25,6 +25,7 @@ protected:
 private:
     QBackingStore *m_backingStore;
     Scene* scene;
+    Camera* camera;
 };
 
 
