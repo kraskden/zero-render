@@ -55,7 +55,7 @@ void Scene::paintModel(ObjModel *model) {
     QMatrix4x4 view = matrix::view(eye, center, up);
     QMatrix4x4 projection = matrix::projection_my((eye - center).normalized().length());
 
-    QMatrix4x4 final = viewport * projection * view * mod;
+    QMatrix4x4 final = viewport * projection  * view * mod;
 
     for (Face face : model->getFaces()) {
         for (int i = 0; i < 3; ++i) {
