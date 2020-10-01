@@ -53,7 +53,7 @@ void Scene::paintModel(ObjModel *model) {
     QMatrix4x4 mod = matrix::scale(QVector3D{1,1,1});
     QMatrix4x4 viewport = matrix::viewport(width, height);
     QMatrix4x4 view = matrix::view(eye, center, up);
-    QMatrix4x4 projection = matrix::projection_my((eye - center).normalized().length());
+    QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, M_PI / 2, 1.2, 1000.0);
 
     QMatrix4x4 final = viewport * projection  * view * mod;
 
