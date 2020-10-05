@@ -1,61 +1,104 @@
 #ifndef GLPAINTER_CAMERA_H
 #define GLPAINTER_CAMERA_H
+
 #include <QtCore/QObject>
 #include <QtGui/QVector3D>
 
+#include "../math/Matrix4D.h"
+
+#include <cmath>
+
+enum CameraMovement {
+    Z, STRAFE, PITCH, YAW
+};
+
+enum MoveDirection {
+    FORWARD = 1,
+    BACKWARD = -1
+};
 
 class Camera : public QObject {
     Q_OBJECT
 
-    QVector3D startEye;
-    QVector3D startFront;
-
+    QVector3D up;
+    QVector3D front;
     QVector3D eye;
-    QVector3D cameraFront;
-    QVector3D cameraUp;
+    QVector3D worldUp;
+    QVector3D right;
 
-    float moveSpeed;
+    float yaw;
+    float pitch;
+
+    float movementSpeed;
     float rotateSpeed;
 
-    float pitch = 0;
-    float yaw = 0;
+public:
+    Camera(const QVector3D &eye, float yaw, float pitch, float movementSpeed, float rotateSpeed, QObject* parent = nullptr)
+            : QObject(parent), eye(eye), yaw(yaw), pitch(pitch), movementSpeed(movementSpeed),
+              rotateSpeed(rotateSpeed) {
+        up = QVector3D{0, 1, 0};
+        worldUp = QVector3D{0, 1, 0};\
+        updateCameraVectors();
+    }
 
 public:
-    Camera(QVector3D eye, QVector3D center, float moveSpeed, float rotateSpeed, QObject* parent = nullptr);
+    void move(CameraMovement movement, MoveDirection direction);
 
-    void incMoveSpeed(float delta) { this->moveSpeed += delta; }
-    void incRotateSpeed(float delta) {this->rotateSpeed += delta; }
+    void incMovementSpeed(float delta) {movementSpeed += delta; }
+    void incRotateSpeed(float delta) {rotateSpeed += delta;}
 
-    // zMove, xMove, YMove
-    void forward();
-    void backward();
-    void right();
-    void left();
+    QMatrix4x4 getViewMatrix() {
+        return matrix::view(eye, eye + front, up);
+    }
 
+    const QVector3D &getFront() const {
+        return front;
+    }
 
-    void rotateY(bool reverse);
-    void rotateX(bool reverse);
+    const QVector3D &getEye() const {
+        return eye;
+    }
 
-    void reset();
+    float getYaw() const {
+        return yaw;
+    }
 
-    const QVector3D &getEye() const;
+    float getPitch() const {
+        return pitch;
+    }
 
-    QVector3D getCenter() const;
+    float getMovementSpeed() const {
+        return movementSpeed;
+    }
 
-    const QVector3D &getCameraFront() const;
+    float getRotateSpeed() const {
+        return rotateSpeed;
+    }
 
-    float getMoveSpeed() const;
-
-    float getRotateSpeed() const;
-
-
-signals:
-    void cameraChanged();
+    void reset(const QVector3D& eye, float yaw, float pitch) {
+        this->eye = eye;
+        this->yaw = yaw;
+        this->pitch = pitch;
+        this->up = QVector3D{0, 1, 0};
+        updateCameraVectors();
+    }
 
 private:
-    void zMove(float delta);
-    void sideMove(float delta);
-    void rotate(const QVector3D& axis, float angle);
+    void changePitch(float sign) {
+        float limit = M_PI / 2 - 0.05;
+        pitch += rotateSpeed * sign;
+        pitch = pitch > limit ? limit : pitch;
+        pitch = pitch < -limit ? -limit : pitch;
+        updateCameraVectors();
+    }
+
+    void changeYaw(float sign) {
+        yaw += rotateSpeed * sign;
+        updateCameraVectors();
+    }
+
+    void updateCameraVectors();
+
 };
 
 

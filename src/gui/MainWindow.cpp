@@ -16,11 +16,8 @@ MainWindow::MainWindow(QWindow *parent) :
         m_backingStore(new QBackingStore(this)),
         scene(new Scene(width(), height(), this))
 {
-    this->camera = new Camera(QVector3D{0, 0, DEF_CAMERA_Z},
-                              QVector3D{},
-                              DEF_MOVE_SPEED,
-                              DEF_ROTATE_SPEED,
-                              this);
+    this->camera = new Camera(QVector3D(0, 0, DEF_CAMERA_Z), DEF_CAMERA_YAW, DEF_CAMERA_PITCH,
+                              DEF_MOVE_SPEED, DEF_ROTATE_SPEED, this);
     scene->setCamera(camera);
 
     setGeometry(0, 0, 1000, 1000);
@@ -97,35 +94,35 @@ void MainWindow::handleInput() {
 void MainWindow::handleKey(int key) {
     switch (key) {
         case Qt::Key_W:
-            camera->forward();
+            camera->move(CameraMovement::Z, MoveDirection::FORWARD);
             break;
         case Qt::Key_S:
-            camera->backward();
+            camera->move(CameraMovement::Z, MoveDirection::BACKWARD);
             break;
         case Qt::Key_A:
-            camera->left();
+            camera->move(CameraMovement::STRAFE, MoveDirection::BACKWARD);
             break;
         case Qt::Key_D:
-            camera->right();
+            camera->move(CameraMovement::STRAFE, MoveDirection::FORWARD);
             break;
         case Qt::Key_K:
-            camera->rotateY(false);
+            camera->move(CameraMovement::YAW, MoveDirection::FORWARD);
             break;
         case Qt::Key_Semicolon:
-            camera->rotateY(true);
+            camera->move(CameraMovement::YAW, MoveDirection::BACKWARD);
             break;
         case Qt::Key_O:
-            camera->rotateX(false);
+            camera->move(CameraMovement::PITCH, MoveDirection::FORWARD);
             break;
         case Qt::Key_L:
-            camera->rotateX(true);
+            camera->move(CameraMovement::PITCH, MoveDirection::BACKWARD);
             break;
 
         case Qt::Key_Q:
-            camera->incMoveSpeed(-DELTA_MOVE_SPEED);
+            camera->incMovementSpeed(-DELTA_MOVE_SPEED);
             break;
         case Qt::Key_E:
-            camera->incMoveSpeed(DELTA_MOVE_SPEED);
+            camera->incMovementSpeed(DELTA_MOVE_SPEED);
             break;
         case Qt::Key_I:
             camera->incRotateSpeed(-DELTA_ROTATE_SPEED);
@@ -135,7 +132,7 @@ void MainWindow::handleKey(int key) {
             break;
 
         case Qt::Key_R:
-            camera->reset();
+            camera->reset(QVector3D{0, 0, DEF_CAMERA_Z}, DEF_CAMERA_YAW, DEF_CAMERA_PITCH);
             break;
     }
 }
