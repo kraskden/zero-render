@@ -8,11 +8,11 @@
 
 #include <cmath>
 
-enum CameraMovement {
+enum CamMov {
     Z, STRAFE, PITCH, YAW
 };
 
-enum MoveDirection {
+enum CamSide {
     FORWARD = 1,
     BACKWARD = -1
 };
@@ -42,7 +42,7 @@ public:
     }
 
 public:
-    void move(CameraMovement movement, MoveDirection direction);
+    void move(CamMov movement, CamSide direction);
 
     void incMovementSpeed(float delta) {movementSpeed += delta; }
     void incRotateSpeed(float delta) {rotateSpeed += delta;}

@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#define UPDATE_TIMER_TIMEOUT 16
+
 #define Z_NEAR 0.4
 #define Z_FAR 1000.0
 #define FOV (M_PI / 4)

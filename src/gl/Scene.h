@@ -42,8 +42,6 @@ public:
 
     ~Scene() override;
 
-    void drawAsyncPoint(int x, int y);
-
 
 private:
     void debugPrint();

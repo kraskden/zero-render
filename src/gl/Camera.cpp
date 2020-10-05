@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-void Camera::move(CameraMovement movement, MoveDirection direction) {
-    float mul = direction == MoveDirection::FORWARD ? 1 : -1;
+void Camera::move(CamMov movement, CamSide direction) {
+    float mul = direction == CamSide::FORWARD ? 1 : -1;
     switch (movement) {
         case Z:
             this->eye += front * mul * movementSpeed;
