@@ -3,6 +3,7 @@
 
 #include <QtCore/QObject>
 #include <QtGui/QPainter>
+#include <QtCore/QMutex>
 #include "../obj/ObjModel.h"
 #include "GlPainter.h"
 #include "Camera.h"
@@ -11,9 +12,12 @@ class Scene : public QObject {
     Q_OBJECT
 
 private:
-    const QString modelPath = "Diablo/Model.obj";
+    const QString modelPath = "Ship/Model.obj";
+
+    QMutex* mutexes;
 
     QList<ObjModel*> models;
+
     GlPainter painter;
     int width;
     int height;
@@ -37,6 +41,9 @@ public:
     void setCamera(Camera* camera);
 
     ~Scene() override;
+
+    void drawAsyncPoint(int x, int y);
+
 
 private:
     void debugPrint();

@@ -3,9 +3,12 @@
 
 #include "Scene.h"
 #include <cmath>
+#include <QtCore/QMutex>
 #include "../math/Matrix4D.h"
 #include "../obj/Parser.h"
 #include "../common/const.h"
+
+#include <QtConcurrent/QtConcurrentMap>
 
 Scene::Scene(int width, int height, QObject *parent) :
     QObject(parent), painter(nullptr), width(width), height(height) {
@@ -51,6 +54,9 @@ bool is_vec_drop(const QVector4D& vec) {
 
 
 void Scene::paintModel(ObjModel *model) {
+
+    mutexes = new QMutex[width * height];
+
     debugPrint();
     QMatrix4x4 mod = matrix::scale(QVector3D{1,1,1});
     QMatrix4x4 viewport = matrix::viewport(width, height);
@@ -59,7 +65,8 @@ void Scene::paintModel(ObjModel *model) {
 
     QMatrix4x4 projectionView = projection  * view * mod;
 
-    for (Face face : model->getFaces()) {
+    QList<QList<Point>> faces = model->getFaces();
+    QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&projectionView, &viewport, this](auto face) -> void {
         for (int i = 0; i < 3; ++i) {
             QVector4D fst =  projectionView * QVector4D(*face[i], 1);
             QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);
@@ -72,9 +79,34 @@ void Scene::paintModel(ObjModel *model) {
 
             norm_vec(fst); norm_vec(snd);
 
-            painter.line(fst.x(), fst.y(), snd.x(), snd.y());
+            painter.asyncLine(fst.x(), fst.y(), snd.x(), snd.y(), this);
         }
-    }
+
+    });
+
+    qDebug() << "Finished1";
+    paintLoop.waitForFinished();
+    qDebug() << "Finished2";
+    delete [] mutexes;
+//
+//    for (Face face : model->getFaces()) {
+//        for (int i = 0; i < 3; ++i) {
+//            QVector4D fst =  projectionView * QVector4D(*face[i], 1);
+//            QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);
+//
+//            if (is_vec_drop(fst) || is_vec_drop(snd)) {
+//                continue;
+//            }
+//
+//            fst = viewport * fst; snd = viewport * snd;
+//
+//            norm_vec(fst); norm_vec(snd);
+//
+//            painter.line(fst.x(), fst.y(), snd.x(), snd.y());
+//        }
+//    }
+
+   // delete[] mutexes;
 }
 
 void Scene::setCamera(Camera *camera) {
@@ -119,5 +151,12 @@ void Scene::debugPrint() {
     qPainter->drawText(QRect(0, 0, 1000, 1000), text);
 
     qPainter->setPen(prevColor);
+}
+
+void Scene::drawAsyncPoint(int x, int y) {
+   mutexes[y * width + x].lock();
+//   mutex.lock();
+    painter.qPainter()->drawPoint(x, y);
+    mutexes[y * width + x].unlock();
 }
 

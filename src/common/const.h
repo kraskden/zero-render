@@ -5,7 +5,7 @@
 
 #define Z_NEAR 0.4
 #define Z_FAR 1000.0
-#define FOV (M_PI / 2)
+#define FOV (M_PI / 4)
 
 #define DEF_MOVE_SPEED 0.13
 #define DEF_ROTATE_SPEED (M_PI * 2 / 100.0)
