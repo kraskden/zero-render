@@ -66,7 +66,7 @@ void Scene::paintModel(ObjModel *model) {
     QMatrix4x4 projectionView = projection  * view * mod;
 
     QList<QList<Point>> faces = model->getFaces();
-    QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](auto face) -> void {
+    QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
         for (int i = 0; i < 3; ++i) {
             QVector4D fst =  projectionView * QVector4D(*face[i], 1);
             QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);

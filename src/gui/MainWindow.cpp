@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWindow *parent) :
 
     initHandlers();
     setGeometry(0, 0, 1000, 1000);
+    setFlag(Qt::WindowType::Window);
     raise();
 }
 

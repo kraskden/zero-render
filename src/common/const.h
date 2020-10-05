@@ -11,7 +11,7 @@
 
 #define DEF_MOVE_SPEED 0.13
 #define DEF_ROTATE_SPEED (M_PI * 2 / 100.0)
-#define DEF_CAMERA_Z 1.5
+#define DEF_CAMERA_Z 7
 #define DEF_CAMERA_YAW (-M_PI / 2)
 #define DEF_CAMERA_PITCH 0
 

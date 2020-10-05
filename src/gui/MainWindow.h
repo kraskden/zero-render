@@ -19,7 +19,6 @@ class MainWindow : public  QWindow
     QMap<int, std::function<void()>> moveHandlers;
     QMap<int, std::function<void()>> controlHandlers;
     QSet<int> keysActive = {};
-    bool firstRelease = false;
 
 public slots:
     void renderLater();
