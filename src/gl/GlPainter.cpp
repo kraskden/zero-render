@@ -41,15 +41,17 @@ void GlPainter::line(const QPoint &start, const QPoint &end) {
     line(start.x(), start.y(), end.x(), end.y());
 }
 
-void GlPainter::asyncLine(int x1, int y1, int x2, int y2, Scene *scene) {
+void GlPainter::asyncLine(int x1, int y1, int x2, int y2, QMutex* mutexes, int height) {
     int dx = abs(x2 - x1);
     int sx = x1 < x2 ? 1 : -1;
     int dy = -abs(y2-y1);
     int sy = y1 < y2 ? 1 : -1;
     int err = dx + dy;
     for (;;) {
-        scene->drawAsyncPoint(x1, y1);
-        //painter->drawPoint(x1, y1);
+        int lockIdx = y1 * height + x1;
+        mutexes[lockIdx].lock();
+        painter->drawPoint(x1, y1);
+        mutexes[lockIdx].unlock();
         if (x1 == x2 && y1 == y2) {
             return;
         }

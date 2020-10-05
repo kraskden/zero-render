@@ -66,7 +66,7 @@ void Scene::paintModel(ObjModel *model) {
     QMatrix4x4 projectionView = projection  * view * mod;
 
     QList<QList<Point>> faces = model->getFaces();
-    QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&projectionView, &viewport, this](auto face) -> void {
+    QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](auto face) -> void {
         for (int i = 0; i < 3; ++i) {
             QVector4D fst =  projectionView * QVector4D(*face[i], 1);
             QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);
@@ -79,34 +79,12 @@ void Scene::paintModel(ObjModel *model) {
 
             norm_vec(fst); norm_vec(snd);
 
-            painter.asyncLine(fst.x(), fst.y(), snd.x(), snd.y(), this);
+            painter.asyncLine(fst.x(), fst.y(), snd.x(), snd.y(), mutexes, height);
         }
-
     });
 
-    qDebug() << "Finished1";
     paintLoop.waitForFinished();
-    qDebug() << "Finished2";
     delete [] mutexes;
-//
-//    for (Face face : model->getFaces()) {
-//        for (int i = 0; i < 3; ++i) {
-//            QVector4D fst =  projectionView * QVector4D(*face[i], 1);
-//            QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);
-//
-//            if (is_vec_drop(fst) || is_vec_drop(snd)) {
-//                continue;
-//            }
-//
-//            fst = viewport * fst; snd = viewport * snd;
-//
-//            norm_vec(fst); norm_vec(snd);
-//
-//            painter.line(fst.x(), fst.y(), snd.x(), snd.y());
-//        }
-//    }
-
-   // delete[] mutexes;
 }
 
 void Scene::setCamera(Camera *camera) {
@@ -151,12 +129,5 @@ void Scene::debugPrint() {
     qPainter->drawText(QRect(0, 0, 1000, 1000), text);
 
     qPainter->setPen(prevColor);
-}
-
-void Scene::drawAsyncPoint(int x, int y) {
-   mutexes[y * width + x].lock();
-//   mutex.lock();
-    painter.qPainter()->drawPoint(x, y);
-    mutexes[y * width + x].unlock();
 }
 

@@ -3,6 +3,7 @@
 
 
 #include <QtGui/QPainter>
+#include <QtCore/QMutex>
 
 class Scene;
 
@@ -17,7 +18,7 @@ public:
     void line(int x1, int y1, int x2, int y2);
     void line(const QPoint& start, const QPoint& end);
 
-    void asyncLine(int x1, int y1, int x2, int y2, Scene* scene);
+    void asyncLine(int x1, int y1, int x2, int y2, QMutex* mutexes, int height);
 
     QPainter* qPainter() {return painter;}
 };
