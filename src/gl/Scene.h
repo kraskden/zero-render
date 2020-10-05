@@ -7,7 +7,6 @@
 #include "GlPainter.h"
 #include "Camera.h"
 
-
 class Scene : public QObject {
     Q_OBJECT
 

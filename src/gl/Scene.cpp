@@ -5,6 +5,7 @@
 #include <cmath>
 #include "../math/Matrix4D.h"
 #include "../obj/Parser.h"
+#include "../common/const.h"
 
 Scene::Scene(int width, int height, QObject *parent) :
     QObject(parent), painter(nullptr), width(width), height(height) {
@@ -43,6 +44,11 @@ void norm_vec(QVector4D& vec) {
     vec.setW(1.0);
 }
 
+bool is_vec_drop(const QVector4D& vec) {
+    float w = abs(vec.w());
+    return (abs(vec.x()) > w) || (abs(vec.y()) > w) || (abs(vec.z()) > w);
+}
+
 
 void Scene::paintModel(ObjModel *model) {
     debugPrint();
@@ -53,14 +59,20 @@ void Scene::paintModel(ObjModel *model) {
     QMatrix4x4 mod = matrix::scale(QVector3D{1,1,1});
     QMatrix4x4 viewport = matrix::viewport(width, height);
     QMatrix4x4 view = matrix::view(eye, center, up);
-    QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, M_PI / 2, 1.2, 1000.0);
+    QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, FOV, Z_NEAR, Z_FAR);
 
-    QMatrix4x4 final = viewport * projection  * view * mod;
+    QMatrix4x4 projectionView = projection  * view * mod;
 
     for (Face face : model->getFaces()) {
         for (int i = 0; i < 3; ++i) {
-            QVector4D fst = final * QVector4D(*face[i], 1);
-            QVector4D snd = final *  QVector4D(*face[(i + 1) % 3], 1);
+            QVector4D fst =  projectionView * QVector4D(*face[i], 1);
+            QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);
+
+            if (is_vec_drop(fst) || is_vec_drop(snd)) {
+                continue;
+            }
+
+            fst = viewport * fst; snd = viewport * snd;
 
             norm_vec(fst); norm_vec(snd);
 
@@ -71,6 +83,10 @@ void Scene::paintModel(ObjModel *model) {
 
 void Scene::setCamera(Camera *camera) {
     this->camera = camera;
+}
+
+QString float2str(float f) {
+    return QString::number(f, 'f', 2);
 }
 
 QString vec2str(const QVector3D& vec) {
@@ -87,13 +103,12 @@ void Scene::debugPrint() {
 
     const QVector3D& eye = camera->getEye();
     const QVector3D& center = camera->getCenter();
-    const float radius = camera->getRadius();
-    const float angle = (int)(camera->getAngle() * 180 / M_PI) % 360;
 
+    QString text = QString("Eye: %1\nFront: %2\nMove speed:  %3\nRotate speed: %4").arg(vec2str(eye))
+            .arg(vec2str(camera->getCameraFront()))
+            .arg(float2str(camera->getMoveSpeed()))
+            .arg( (int)(camera->getRotateSpeed() * 180 / M_PI));
 
-    QString text = QString("Radius: %1\nAngle: %2\nEye: %3\nCenter: %4").arg(radius).arg(angle)
-            .arg(vec2str(eye))
-            .arg(vec2str(center));
     qPainter->drawText(QRect(0, 0, 1000, 100), text);
 
     qPainter->setPen(prevColor);

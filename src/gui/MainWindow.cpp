@@ -2,10 +2,13 @@
 #include <QtGui/QBackingStore>
 #include <QtGui/QResizeEvent>
 
+#include <QDebug>
+
 #include <cmath>
 
 #include "MainWindow.h"
 #include "../gl/GlPainter.h"
+#include "../common/const.h"
 
 
 MainWindow::MainWindow(QWindow *parent) :
@@ -13,12 +16,15 @@ MainWindow::MainWindow(QWindow *parent) :
         m_backingStore(new QBackingStore(this)),
         scene(new Scene(width(), height(), this))
 {
-    this->setFlag(Qt::Dialog);
-    this->camera = new Camera(QVector3D{0, 0, 1.0}, QVector3D{}, 0.03, this);
-    connect(camera, &Camera::cameraChanged, this, &MainWindow::requestUpdate);
+    this->camera = new Camera(QVector3D{0, 0, DEF_CAMERA_Z},
+                              QVector3D{},
+                              DEF_MOVE_SPEED,
+                              DEF_ROTATE_SPEED,
+                              this);
     scene->setCamera(camera);
 
     setGeometry(0, 0, 1000, 1000);
+    raise();
 }
 
 void MainWindow::renderLater()
@@ -67,8 +73,29 @@ void MainWindow::exposeEvent(QExposeEvent *event)
     }
 }
 
+
 void MainWindow::keyPressEvent(QKeyEvent *event) {
-    switch (event->key()) {
+    firstRelease = true;
+    keysActive += event->key();
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event) {
+    if (firstRelease) {
+        handleInput();
+    }
+    firstRelease = false;
+    keysActive -= event->key();
+}
+
+void MainWindow::handleInput() {
+    for (int key : keysActive) {
+        handleKey(key);
+    }
+    requestUpdate();
+}
+
+void MainWindow::handleKey(int key) {
+    switch (key) {
         case Qt::Key_W:
             camera->forward();
             break;
@@ -76,13 +103,40 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
             camera->backward();
             break;
         case Qt::Key_A:
-            camera->rotate(M_PI / 30);
+            camera->left();
             break;
         case Qt::Key_D:
-            camera->rotate(-M_PI / 30);
+            camera->right();
             break;
-        default:
-            QWindow::keyPressEvent(event);
+        case Qt::Key_K:
+            camera->rotateY(false);
+            break;
+        case Qt::Key_Semicolon:
+            camera->rotateY(true);
+            break;
+        case Qt::Key_O:
+            camera->rotateX(false);
+            break;
+        case Qt::Key_L:
+            camera->rotateX(true);
+            break;
+
+        case Qt::Key_Q:
+            camera->incMoveSpeed(-DELTA_MOVE_SPEED);
+            break;
+        case Qt::Key_E:
+            camera->incMoveSpeed(DELTA_MOVE_SPEED);
+            break;
+        case Qt::Key_I:
+            camera->incRotateSpeed(-DELTA_ROTATE_SPEED);
+            break;
+        case Qt::Key_P:
+            camera->incRotateSpeed(DELTA_ROTATE_SPEED);
+            break;
+
+        case Qt::Key_R:
+            camera->reset();
+            break;
     }
 }
 
