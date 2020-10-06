@@ -11,7 +11,7 @@
 #include <QtConcurrent/QtConcurrentMap>
 
 Scene::Scene(int width, int height, QObject *parent) :
-    QObject(parent), painter(nullptr), width(width), height(height) {
+    QObject(parent), painter(nullptr, nullptr, 0), width(width), height(height) {
 
     models.append(parseObjFile(modelPath));
     createAtomics();
@@ -30,7 +30,7 @@ void Scene::repaint() {
 }
 
 void Scene::setPainter(QPainter *qPainter) {
-    this->painter = GlPainter(qPainter);
+    this->painter = GlPainter(qPainter, atomics, height);
 }
 
 void Scene::setWidth(int width) {
@@ -78,7 +78,7 @@ void Scene::paintModel(ObjModel *model) {
             fst = viewport * fst; snd = viewport * snd;
 
             norm_vec(fst); norm_vec(snd);
-            painter.asyncAtomLine(fst.x(), fst.y(), snd.x(), snd.y(), this->atomics, height);
+            painter.asyncLine(fst.x(), fst.y(), snd.x(), snd.y());
         }
     });
 

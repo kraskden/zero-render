@@ -9,17 +9,16 @@ class Scene;
 
 class GlPainter {
     QPainter* painter;
+    QAtomicInt* atomics;
+    int height;
 
 public:
-    explicit GlPainter(QPainter *painter);
+    explicit GlPainter(QPainter *painter, QAtomicInt* atomics, int height);
 
     void clean(int width, int height);
     void setColor(const QColor &color);
-    void line(int x1, int y1, int x2, int y2);
-    void line(const QPoint& start, const QPoint& end);
 
-    void asyncLine(int x1, int y1, int x2, int y2, QMutex* mutexes, int height);
-    void asyncAtomLine(int x1, int y1, int x2, int y2, QAtomicInt* atomic, int height);
+    void asyncLine(int x1, int y1, int x2, int y2);
 
     QPainter* qPainter() {return painter;}
 };
