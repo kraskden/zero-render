@@ -13,8 +13,7 @@ class Scene : public QObject {
 
 private:
     const QString modelPath = "Ship/Model.obj";
-
-    QMutex* mutexes;
+    QAtomicInt* atomics = nullptr;
 
     QList<ObjModel*> models;
 
@@ -45,6 +44,7 @@ public:
 
 private:
     void debugPrint();
+    void createAtomics();
 };
 
 

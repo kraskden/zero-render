@@ -14,6 +14,7 @@ Scene::Scene(int width, int height, QObject *parent) :
     QObject(parent), painter(nullptr), width(width), height(height) {
 
     models.append(parseObjFile(modelPath));
+    createAtomics();
 }
 
 Scene::~Scene() {
@@ -34,10 +35,12 @@ void Scene::setPainter(QPainter *qPainter) {
 
 void Scene::setWidth(int width) {
     Scene::width = width;
+    createAtomics();
 }
 
 void Scene::setHeight(int height) {
     Scene::height = height;
+    createAtomics();
 }
 
 void norm_vec(QVector4D& vec) {
@@ -54,9 +57,6 @@ bool is_vec_drop(const QVector4D& vec) {
 
 
 void Scene::paintModel(ObjModel *model) {
-
-    mutexes = new QMutex[width * height];
-
     debugPrint();
     QMatrix4x4 mod = matrix::scale(QVector3D{1,1,1});
     QMatrix4x4 viewport = matrix::viewport(width, height);
@@ -78,13 +78,11 @@ void Scene::paintModel(ObjModel *model) {
             fst = viewport * fst; snd = viewport * snd;
 
             norm_vec(fst); norm_vec(snd);
-
-            painter.asyncLine(fst.x(), fst.y(), snd.x(), snd.y(), mutexes, height);
+            painter.asyncAtomLine(fst.x(), fst.y(), snd.x(), snd.y(), this->atomics, height);
         }
     });
 
     paintLoop.waitForFinished();
-    delete [] mutexes;
 }
 
 void Scene::setCamera(Camera *camera) {
@@ -129,5 +127,10 @@ void Scene::debugPrint() {
     qPainter->drawText(QRect(0, 0, 1000, 1000), text);
 
     qPainter->setPen(prevColor);
+}
+
+void Scene::createAtomics() {
+    delete [] atomics;
+    atomics = new QAtomicInt[width * height];
 }
 

@@ -19,6 +19,7 @@ public:
     void line(const QPoint& start, const QPoint& end);
 
     void asyncLine(int x1, int y1, int x2, int y2, QMutex* mutexes, int height);
+    void asyncAtomLine(int x1, int y1, int x2, int y2, QAtomicInt* atomic, int height);
 
     QPainter* qPainter() {return painter;}
 };
