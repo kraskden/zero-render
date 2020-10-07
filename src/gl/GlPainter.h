@@ -5,8 +5,6 @@
 #include <QtGui/QPainter>
 #include <QtCore/QMutex>
 
-class Scene;
-
 class GlPainter {
     QPainter* painter;
     QAtomicInt* atomics;
@@ -19,8 +17,18 @@ public:
     void setColor(const QColor &color);
 
     void asyncLine(int x1, int y1, int x2, int y2);
+    void asyncTriangle(QPoint p1, QPoint p2, QPoint p3);
 
     QPainter* qPainter() {return painter;}
+
+private:
+    inline void lock(int lockIdx) {
+        while(!atomics[lockIdx].testAndSetAcquire(0, 1)) {}
+    }
+
+    inline void unlock(int lockIdx) {
+        atomics[lockIdx] = 0;
+    }
 };
 
 

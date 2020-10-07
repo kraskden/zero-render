@@ -21,16 +21,16 @@ Scene::~Scene() {
     qDeleteAll(models.begin(), models.end());
 }
 
-void Scene::repaint() {
+void Scene::repaint(QPainter *qPainter) {
+    this->painter = GlPainter(qPainter, atomics, height);
     painter.setColor(QColorConstants::Red);
     painter.clean(width, height);
-    for (auto model : models) {
-        paintModel(model);
-    }
-}
-
-void Scene::setPainter(QPainter *qPainter) {
-    this->painter = GlPainter(qPainter, atomics, height);
+    painter.asyncTriangle({10, 10}, {100, 600}, {800, 800});
+    painter.asyncTriangle({600, 500}, {600, 100}, {300, 200});
+    painter.asyncTriangle({200, 100}, {300, 50}, {300, 100});
+//    for (auto model : models) {
+//        paintModel(model);
+//    }
 }
 
 void Scene::setWidth(int width) {

@@ -47,8 +47,7 @@ void MainWindow::renderNow()
 
     QPaintDevice *device = m_backingStore->paintDevice();
     QPainter painter(device);
-    scene->setPainter(&painter);
-    scene->repaint();
+    scene->repaint(&painter);
     painter.end();
     m_backingStore->endPaint();
     m_backingStore->flush(drawRect);

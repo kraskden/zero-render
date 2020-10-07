@@ -26,12 +26,10 @@ private:
     void paintModel(ObjModel* model);
 
 public slots:
-    void repaint();
+    void repaint(QPainter *qPainter);
 
 public:
     explicit Scene(int width, int height, QObject *parent);
-
-    void setPainter(QPainter* qPainter);
 
     void setWidth(int width);
 
