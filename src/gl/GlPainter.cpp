@@ -9,8 +9,9 @@ void GlPainter::clean(int width, int height) {
 }
 
 
-GlPainter::GlPainter(QPainter *painter, QAtomicInt *atomics, int height) : painter(painter), atomics(atomics),
-    height(height) {}
+GlPainter::GlPainter(QPainter *painter, QAtomicInt *atomics, int *zBuffer, int width)
+        : painter(painter), atomics(atomics),
+          width(width), zBuffer(zBuffer) {}
 
 void GlPainter::setColor(const QColor &color) {
     painter->setPen(color);
@@ -23,7 +24,7 @@ void GlPainter::asyncLine(int x1, int y1, int x2, int y2) {
     int sy = y1 < y2 ? 1 : -1;
     int err = dx + dy;
     for (;;) {
-        int lockIdx = y1 * height + x1;
+        int lockIdx = y1 * width + x1;
         lock(lockIdx);
         painter->drawPoint(x1, y1);
         unlock(lockIdx);
@@ -43,27 +44,34 @@ void GlPainter::asyncLine(int x1, int y1, int x2, int y2) {
 
 }
 
-void GlPainter::asyncTriangle(QPoint p1, QPoint p2, QPoint p3) {
-    if (p1.y() > p2.y()) std::swap(p1, p2);
-    if (p1.y() > p3.y()) std::swap(p1, p3);
-    if (p2.y() > p3.y()) std::swap(p2, p3);
-
-    float k_start = (float)(p1.x() - p3.x()) / (float)(p1.y() - p3.y());
-    float k_end_fst = (float)(p1.x() - p2.x()) / (float)(p1.y() - p2.y());
-    float k_end_snd = (float)(p2.x() - p3.x()) / (float)(p2.y() - p3.y());
-    for (int yi = p1.y(); yi < p3.y(); ++yi) {
-        int x_start = p1.x() + k_start * (yi - p1.y());
-        int x_end = yi < p2.y() ? p1.x() + k_end_fst * (yi - p1.y()) : p2.x() + k_end_snd * (yi - p2.y());
-
-        if (x_start > x_end) std::swap(x_start, x_end);
-        for (int xi = x_start; xi <= x_end; ++xi) {
-           int lockIdx = yi * height + xi;
-           lock(lockIdx);
-           painter->drawPoint(xi, yi);
-           unlock(lockIdx);
+void GlPainter::asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity) {
+    if (t0.y==t1.y && t0.y==t2.y) return;
+    if (t0.y>t1.y) std::swap(t0, t1);
+    if (t0.y>t2.y) std::swap(t0, t2);
+    if (t1.y>t2.y) std::swap(t1, t2);
+    int total_height = t2.y-t0.y;
+    for (int i=0; i<total_height; i++) {
+        bool second_half = i>t1.y-t0.y || t1.y==t0.y;
+        int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
+        float alpha = (float)i/total_height;
+        float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/segment_height; // be careful: with above conditions no division by zero here
+        QVector3D A = t0.toVector3D() + (t2-t0)*alpha;
+        QVector3D B = second_half ? t1.toVector3D() + (t2-t1)*beta : t0.toVector3D() + (t1-t0)*beta;
+        if (A.x()>B.x()) std::swap(A, B);
+        for (int j=A.x(); j<=B.x(); j++) {
+            float phi = B.x()==A.x() ? 1. : (float)(j-A.x())/(float)(B.x()-A.x());
+            Vec3i P = (A) + (B-A)*phi;
+            int lockIdx = P.x+P.y*width;
+            lock(lockIdx);
+            if (zBuffer[lockIdx] < P.z) {
+                zBuffer[lockIdx] = P.z;
+//                painter->setPen(QColorConstants::Red);
+                //painter->setPen(QColor::fromRgb(intensity * 255, intensity * 255, intensity * 255));
+                painter->drawPoint(P.x, P.y);
+            }
+            unlock(lockIdx);
         }
     }
 }
-
 
 

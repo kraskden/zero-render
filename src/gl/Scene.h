@@ -14,6 +14,7 @@ class Scene : public QObject {
 private:
     const QString modelPath = "Ship/Model.obj";
     QAtomicInt* atomics = nullptr;
+    int* zBuffer = nullptr;
 
     QList<ObjModel*> models;
 
@@ -22,6 +23,8 @@ private:
     int height;
 
     Camera* camera;
+
+    static QVector3D lightFront;
 
     void paintModel(ObjModel* model);
 
@@ -42,7 +45,7 @@ public:
 
 private:
     void debugPrint();
-    void createAtomics();
+    void createBuffers();
 };
 
 

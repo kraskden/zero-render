@@ -10,11 +10,13 @@
 
 #include <QtConcurrent/QtConcurrentMap>
 
+QVector3D Scene::lightFront = QVector3D{0, 0, -1};
+
 Scene::Scene(int width, int height, QObject *parent) :
-    QObject(parent), painter(nullptr, nullptr, 0), width(width), height(height) {
+        QObject(parent), painter(nullptr, nullptr, nullptr, 0), width(width), height(height) {
 
     models.append(parseObjFile(modelPath));
-    createAtomics();
+    createBuffers();
 }
 
 Scene::~Scene() {
@@ -22,12 +24,17 @@ Scene::~Scene() {
 }
 
 void Scene::repaint(QPainter *qPainter) {
-    this->painter = GlPainter(qPainter, atomics, height);
-    painter.setColor(QColorConstants::Red);
-    painter.clean(width, height);
-    painter.asyncTriangle({10, 10}, {100, 600}, {800, 800});
-    painter.asyncTriangle({600, 500}, {600, 100}, {300, 200});
-    painter.asyncTriangle({200, 100}, {300, 50}, {300, 100});
+    std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::min());
+    this->painter = GlPainter(qPainter, atomics, zBuffer, width);
+
+    QImage world = QImage(width, height, QImage::Format_RGB32);
+    world.fill(QColorConstants::Red);
+    this->painter.qPainter()->drawImage(0, 0, world);
+
+
+//    painter.clean(width, height);
+//    painter.setColor(QColorConstants::White);
+//
 //    for (auto model : models) {
 //        paintModel(model);
 //    }
@@ -35,12 +42,12 @@ void Scene::repaint(QPainter *qPainter) {
 
 void Scene::setWidth(int width) {
     Scene::width = width;
-    createAtomics();
+    createBuffers();
 }
 
 void Scene::setHeight(int height) {
     Scene::height = height;
-    createAtomics();
+    createBuffers();
 }
 
 void norm_vec(QVector4D& vec) {
@@ -55,9 +62,7 @@ bool is_vec_drop(const QVector4D& vec) {
     return (abs(vec.x()) > w) || (abs(vec.y()) > w) || (abs(vec.z()) > w);
 }
 
-
 void Scene::paintModel(ObjModel *model) {
-    debugPrint();
     QMatrix4x4 mod = matrix::scale(QVector3D{1,1,1});
     QMatrix4x4 viewport = matrix::viewport(width, height);
     QMatrix4x4 view = camera->getViewMatrix();
@@ -65,24 +70,30 @@ void Scene::paintModel(ObjModel *model) {
 
     QMatrix4x4 projectionView = projection  * view * mod;
 
-    QList<QList<Point>> faces = model->getFaces();
+    QList<QList<Point>>& faces = model->getFaces();
     QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
-        for (int i = 0; i < 3; ++i) {
-            QVector4D fst =  projectionView * QVector4D(*face[i], 1);
-            QVector4D snd =  projectionView *  QVector4D(*face[(i + 1) % 3], 1);
 
-            if (is_vec_drop(fst) || is_vec_drop(snd)) {
-                continue;
-            }
+        QVector4D projs[3];
+        QVector4D screens[3];
 
-            fst = viewport * fst; snd = viewport * snd;
+        for (int i = 0 ; i < 3; ++i) {
+            projs[i] = projectionView * QVector4D(*face[i], 1);
+            if (is_vec_drop(projs[i])) return;
+            screens[i] = viewport * projs[i];
+            norm_vec(screens[i]);
+        }
 
-            norm_vec(fst); norm_vec(snd);
-            painter.asyncLine(fst.x(), fst.y(), snd.x(), snd.y());
+        QVector3D n = QVector3D::crossProduct((projs[2] - projs[0]).toVector3D(), (projs[1] - projs[0]).toVector3D()).normalized();
+        float intensity = QVector3D::dotProduct(n, lightFront);
+        float visibility = QVector3D::dotProduct(n, camera->getFront());
+        if (visibility > 0) {
+            this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),
+                                        intensity);
         }
     });
 
     paintLoop.waitForFinished();
+    debugPrint();
 }
 
 void Scene::setCamera(Camera *camera) {
@@ -112,7 +123,7 @@ QString vec2str(const QVector3D& vec) {
 void Scene::debugPrint() {
     QPainter* qPainter = painter.qPainter();
     QColor prevColor = qPainter->pen().color();
-    qPainter->setPen(QColorConstants::White);
+    qPainter->setPen(QColorConstants::Red);
 
     const QVector3D& eye = camera->getEye();
 
@@ -129,8 +140,9 @@ void Scene::debugPrint() {
     qPainter->setPen(prevColor);
 }
 
-void Scene::createAtomics() {
+void Scene::createBuffers() {
+    delete [] zBuffer;
     delete [] atomics;
     atomics = new QAtomicInt[width * height];
+    zBuffer = new int[width * height];
 }
-

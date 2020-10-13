@@ -4,20 +4,22 @@
 
 #include <QtGui/QPainter>
 #include <QtCore/QMutex>
+#include "../math/Vec3i.h"
 
 class GlPainter {
     QPainter* painter;
     QAtomicInt* atomics;
-    int height;
+    int* zBuffer;
+    int width;
 
 public:
-    explicit GlPainter(QPainter *painter, QAtomicInt* atomics, int height);
+    explicit GlPainter(QPainter *painter, QAtomicInt *atomics, int *zBuffer, int width);
 
     void clean(int width, int height);
     void setColor(const QColor &color);
 
     void asyncLine(int x1, int y1, int x2, int y2);
-    void asyncTriangle(QPoint p1, QPoint p2, QPoint p3);
+    void asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity);
 
     QPainter* qPainter() {return painter;}
 
