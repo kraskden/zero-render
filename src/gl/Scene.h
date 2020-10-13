@@ -44,7 +44,7 @@ public:
 
 
 private:
-    void debugPrint();
+    void debugPrint(QPainter *);
     void createBuffers();
 };
 

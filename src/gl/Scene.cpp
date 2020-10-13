@@ -25,19 +25,17 @@ Scene::~Scene() {
 
 void Scene::repaint(QPainter *qPainter) {
     std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::min());
-    this->painter = GlPainter(qPainter, atomics, zBuffer, width);
-
     QImage world = QImage(width, height, QImage::Format_RGB32);
-    world.fill(QColorConstants::Red);
-    this->painter.qPainter()->drawImage(0, 0, world);
+    world.fill(QColorConstants::Black);
 
+    this->painter = GlPainter(&world, atomics, zBuffer, width);
 
-//    painter.clean(width, height);
-//    painter.setColor(QColorConstants::White);
-//
-//    for (auto model : models) {
-//        paintModel(model);
-//    }
+    for (auto model : models) {
+        paintModel(model);
+    }
+
+    qPainter->drawImage(0, 0, world);
+    debugPrint(qPainter);
 }
 
 void Scene::setWidth(int width) {
@@ -85,15 +83,16 @@ void Scene::paintModel(ObjModel *model) {
 
         QVector3D n = QVector3D::crossProduct((projs[2] - projs[0]).toVector3D(), (projs[1] - projs[0]).toVector3D()).normalized();
         float intensity = QVector3D::dotProduct(n, lightFront);
-        float visibility = QVector3D::dotProduct(n, camera->getFront());
-        if (visibility > 0) {
+        float visibility = QVector3D::dotProduct(n, camera->getFront().normalized());
+        //qDebug() << intensity << " " << visibility;
+
+        if (visibility > 0 && intensity > 0) {
             this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),
                                         intensity);
         }
     });
 
     paintLoop.waitForFinished();
-    debugPrint();
 }
 
 void Scene::setCamera(Camera *camera) {
@@ -120,8 +119,7 @@ QString vec2str(const QVector3D& vec) {
         .arg(QString::number(vec.z(), 'f', 2));
 }
 
-void Scene::debugPrint() {
-    QPainter* qPainter = painter.qPainter();
+void Scene::debugPrint(QPainter *qPainter) {
     QColor prevColor = qPainter->pen().color();
     qPainter->setPen(QColorConstants::Red);
 

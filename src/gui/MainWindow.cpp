@@ -4,6 +4,8 @@
 
 #include <QDebug>
 
+#include <linux/input.h>
+
 #include <cmath>
 
 #include "MainWindow.h"
@@ -108,6 +110,7 @@ void MainWindow::initHandlers() {
 }
 
 void MainWindow::onUpdateTimer() {
+
     if (!keysActive.isEmpty()) {
         for (int key : keysActive) {
             if (moveHandlers.contains(key)) {

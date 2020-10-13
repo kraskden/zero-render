@@ -4,20 +4,11 @@
 
 #include "Scene.h"
 
-void GlPainter::clean(int width, int height) {
-    painter->fillRect(0, 0, width, height, QColorConstants::Black);
-}
 
+GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, int *zBuffer, int width)
+        : world(world), atomics(atomics), zBuffer(zBuffer), width(width) {}
 
-GlPainter::GlPainter(QPainter *painter, QAtomicInt *atomics, int *zBuffer, int width)
-        : painter(painter), atomics(atomics),
-          width(width), zBuffer(zBuffer) {}
-
-void GlPainter::setColor(const QColor &color) {
-    painter->setPen(color);
-}
-
-void GlPainter::asyncLine(int x1, int y1, int x2, int y2) {
+void GlPainter::asyncLine(int x1, int y1, int x2, int y2, QRgb color) {
     int dx = abs(x2 - x1);
     int sx = x1 < x2 ? 1 : -1;
     int dy = -abs(y2-y1);
@@ -26,7 +17,7 @@ void GlPainter::asyncLine(int x1, int y1, int x2, int y2) {
     for (;;) {
         int lockIdx = y1 * width + x1;
         lock(lockIdx);
-        painter->drawPoint(x1, y1);
+        world->setPixel(x1, y1, color);
         unlock(lockIdx);
         if (x1 == x2 && y1 == y2) {
             return;
@@ -65,9 +56,8 @@ void GlPainter::asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity) {
             lock(lockIdx);
             if (zBuffer[lockIdx] < P.z) {
                 zBuffer[lockIdx] = P.z;
-//                painter->setPen(QColorConstants::Red);
-                //painter->setPen(QColor::fromRgb(intensity * 255, intensity * 255, intensity * 255));
-                painter->drawPoint(P.x, P.y);
+                QRgb* line = (QRgb*)world->scanLine(P.y);
+                line[P.x] = QColor::fromRgb(intensity * 255, intensity * 255, intensity * 255).rgb();
             }
             unlock(lockIdx);
         }
