@@ -86,7 +86,7 @@ void Scene::paintModel(ObjModel *model) {
         float visibility = QVector3D::dotProduct(n, camera->getFront().normalized());
         if (intensity < 0) intensity = 0;
 
-        if (visibility > 0 && intensity > 0) {
+        if (visibility > 0) {
             this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),
                                         intensity);
         }
