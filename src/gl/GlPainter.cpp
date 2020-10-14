@@ -5,7 +5,7 @@
 #include "Scene.h"
 
 
-GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, int *zBuffer, int width)
+GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, volatile int *zBuffer, int width)
         : world(world), atomics(atomics), zBuffer(zBuffer), width(width) {}
 
 void GlPainter::asyncLine(int x1, int y1, int x2, int y2, QRgb color) {
@@ -54,7 +54,7 @@ void GlPainter::asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity) {
             Vec3i P = (A) + (B-A)*phi;
             int lockIdx = P.x+P.y*width;
             lock(lockIdx);
-            if (zBuffer[lockIdx] < P.z) {
+            if (zBuffer[lockIdx] > P.z) {
                 zBuffer[lockIdx] = P.z;
                 QRgb* line = (QRgb*)world->scanLine(P.y);
                 line[P.x] = QColor::fromRgb(intensity * 255, intensity * 255, intensity * 255).rgb();

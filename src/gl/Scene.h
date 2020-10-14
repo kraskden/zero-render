@@ -14,7 +14,7 @@ class Scene : public QObject {
 private:
     const QString modelPath = "Ship/Model.obj";
     QAtomicInt* atomics = nullptr;
-    int* zBuffer = nullptr;
+    volatile int* zBuffer = nullptr;
 
     QList<ObjModel*> models;
 

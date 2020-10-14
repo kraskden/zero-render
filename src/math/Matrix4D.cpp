@@ -1,6 +1,7 @@
 #include "Matrix4D.h"
 
 #include <cmath>
+#include "../common/const.h"
 
 QVector3D nullVector = QVector3D{};
 
@@ -73,7 +74,7 @@ QMatrix4x4 matrix::viewport(float width, float height) {
     float data[] = {
             width / 2 , 0, 0, width / 2,
             0, -height / 2, 0, height / 2,
-            0, 0, 1, 0,
+            0, 0, DEPTH / 2, DEPTH / 2, // 1
             0, 0, 0, 1
     };
     return QMatrix4x4{data};

@@ -24,7 +24,7 @@ Scene::~Scene() {
 }
 
 void Scene::repaint(QPainter *qPainter) {
-    std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::min());
+    std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::max());
     QImage world = QImage(width, height, QImage::Format_RGB32);
     world.fill(QColorConstants::Black);
 
@@ -81,10 +81,10 @@ void Scene::paintModel(ObjModel *model) {
             norm_vec(screens[i]);
         }
 
-        QVector3D n = QVector3D::crossProduct((projs[2] - projs[0]).toVector3D(), (projs[1] - projs[0]).toVector3D()).normalized();
+        QVector3D n = QVector3D::crossProduct((*face[2] - *face[0]), (*face[1] - *face[0])).normalized();
         float intensity = QVector3D::dotProduct(n, lightFront);
         float visibility = QVector3D::dotProduct(n, camera->getFront().normalized());
-        //qDebug() << intensity << " " << visibility;
+        if (intensity < 0) intensity = 0;
 
         if (visibility > 0 && intensity > 0) {
             this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),
@@ -142,5 +142,5 @@ void Scene::createBuffers() {
     delete [] zBuffer;
     delete [] atomics;
     atomics = new QAtomicInt[width * height];
-    zBuffer = new int[width * height];
+    zBuffer = new volatile int[width * height];
 }
