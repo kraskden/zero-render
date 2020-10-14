@@ -26,7 +26,7 @@ Scene::~Scene() {
 void Scene::repaint(QPainter *qPainter) {
     std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::max());
     QImage world = QImage(width, height, QImage::Format_RGB32);
-    world.fill(QColorConstants::Black);
+    world.fill(QColorConstants::Cyan);
 
     this->painter = GlPainter(&world, atomics, zBuffer, width);
 
@@ -70,7 +70,6 @@ void Scene::paintModel(ObjModel *model) {
 
     QList<QList<Point>>& faces = model->getFaces();
     QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
-
         QVector4D projs[3];
         QVector4D screens[3];
 
@@ -80,13 +79,14 @@ void Scene::paintModel(ObjModel *model) {
             screens[i] = viewport * projs[i];
             norm_vec(screens[i]);
         }
-
+        QVector3D a = (screens[2] - screens[0]).toVector3D();
+        QVector3D b = (screens[1] - screens[0]).toVector3D();
+        float visibility = a.x() * b.y() - a.y() * b.x();
         QVector3D n = QVector3D::crossProduct((*face[2] - *face[0]), (*face[1] - *face[0])).normalized();
         float intensity = QVector3D::dotProduct(n, lightFront);
-        float visibility = QVector3D::dotProduct(n, camera->getFront().normalized());
         if (intensity < 0) intensity = 0;
 
-        if (visibility > 0) {
+        if (visibility > 0 ) {
             this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),
                                         intensity);
         }
@@ -99,12 +99,12 @@ void Scene::setCamera(Camera *camera) {
     this->camera = camera;
 }
 
-QString float2str(float f) {
-    return QString::number(f, 'f', 2);
+QString float2str(float f, int prec = 2) {
+    return QString::number(f, 'f', prec);
 }
 
-int rad2deg(float angle) {
-    return (int)(angle * 180 / M_PI);
+float rad2deg(float angle) {
+    return (float)(angle * 180 / M_PI);
 }
 
 QString deg2str(int deg) {
@@ -131,7 +131,7 @@ void Scene::debugPrint(QPainter *qPainter) {
             .arg(deg2str(rad2deg(camera->getPitch())))
             .arg(deg2str(rad2deg(camera->getYaw())))
             .arg(float2str(camera->getMovementSpeed()))
-            .arg( rad2deg(camera->getRotateSpeed()));
+            .arg( float2str(rad2deg(camera->getRotateSpeed()), 1));
 
     qPainter->drawText(QRect(0, 0, 1000, 1000), text);
 
