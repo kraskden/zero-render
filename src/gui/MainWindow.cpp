@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWindow *parent) :
     scene->setCamera(camera);
 
     dpy = XOpenDisplay(nullptr);
+    XSetInputFocus(dpy, this->winId(), RevertToNone, CurrentTime);
 
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
