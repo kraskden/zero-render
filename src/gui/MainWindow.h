@@ -7,18 +7,22 @@
 #include <QMap>
 #include <QTimer>
 
+#include <X11/Xlib.h>
+
 class MainWindow : public  QWindow
 {
     Q_OBJECT
+
+    Display* dpy;
+    char keysActive[32];
 
     QBackingStore *m_backingStore;
     Scene* scene;
     Camera* camera;
     QTimer* updateTimer;
 
-    QMap<int, std::function<void()>> moveHandlers;
+    QMap<KeyCode, std::function<void()>> moveHandlers;
     QMap<int, std::function<void()>> controlHandlers;
-    QSet<int> keysActive = {};
 
 public slots:
     void renderLater();
@@ -38,10 +42,10 @@ protected:
     void exposeEvent(QExposeEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
 
 private:
     void initHandlers();
+    inline KeyCode key2code(KeySym keySym)  {return XKeysymToKeycode(dpy, keySym); }
 };
 
 

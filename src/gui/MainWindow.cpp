@@ -3,14 +3,15 @@
 #include <QtGui/QResizeEvent>
 
 #include <QDebug>
-
-#include <linux/input.h>
-
 #include <cmath>
 
 #include "MainWindow.h"
 #include "../gl/GlPainter.h"
 #include "../common/const.h"
+
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+
 
 
 MainWindow::MainWindow(QWindow *parent) :
@@ -21,6 +22,8 @@ MainWindow::MainWindow(QWindow *parent) :
     camera = new Camera(QVector3D(0, 0, DEF_CAMERA_Z), DEF_CAMERA_YAW, DEF_CAMERA_PITCH,
                               DEF_MOVE_SPEED, DEF_ROTATE_SPEED, this);
     scene->setCamera(camera);
+
+    dpy = XOpenDisplay(nullptr);
 
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, &MainWindow::onUpdateTimer);
@@ -83,24 +86,18 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     if (controlHandlers.contains(key)) {
         controlHandlers[key]();
         requestUpdate();
-    } else {
-        keysActive += key;
-    }
-}
-
-void MainWindow::keyReleaseEvent(QKeyEvent *event) {
-    keysActive -= event->key();
+    };
 }
 
 void MainWindow::initHandlers() {
-    moveHandlers.insert(Qt::Key_W, [this]() -> void {camera->move(CamMov::Z, CamSide::FORWARD); });
-    moveHandlers.insert(Qt::Key_S, [this]() -> void {camera->move(CamMov::Z, CamSide::BACKWARD); });
-    moveHandlers.insert(Qt::Key_A, [this]() -> void {camera->move(CamMov::STRAFE, CamSide::BACKWARD); });
-    moveHandlers.insert(Qt::Key_D, [this]() -> void {camera->move(CamMov::STRAFE, CamSide::FORWARD); });
-    moveHandlers.insert(Qt::Key_K, [this]() -> void{camera->move(CamMov::YAW, CamSide::BACKWARD);});
-    moveHandlers.insert(Qt::Key_Semicolon, [this]() -> void{camera->move(CamMov::YAW, CamSide::FORWARD);});
-    moveHandlers.insert(Qt::Key_O, [this]() -> void{camera->move(CamMov::PITCH, CamSide::FORWARD);});
-    moveHandlers.insert(Qt::Key_L, [this]() -> void{camera->move(CamMov::PITCH, CamSide::BACKWARD);});
+    moveHandlers.insert(key2code(XK_w), [this]() -> void {camera->move(CamMov::Z, CamSide::FORWARD); });
+    moveHandlers.insert(key2code(XK_s), [this]() -> void {camera->move(CamMov::Z, CamSide::BACKWARD); });
+    moveHandlers.insert(key2code(XK_a), [this]() -> void {camera->move(CamMov::STRAFE, CamSide::BACKWARD); });
+    moveHandlers.insert(key2code(XK_d), [this]() -> void {camera->move(CamMov::STRAFE, CamSide::FORWARD); });
+    moveHandlers.insert(key2code(XK_k), [this]() -> void{camera->move(CamMov::YAW, CamSide::BACKWARD);});
+    moveHandlers.insert(key2code(XK_semicolon), [this]() -> void{camera->move(CamMov::YAW, CamSide::FORWARD);});
+    moveHandlers.insert(key2code(XK_o), [this]() -> void{camera->move(CamMov::PITCH, CamSide::FORWARD);});
+    moveHandlers.insert(key2code(XK_l), [this]() -> void{camera->move(CamMov::PITCH, CamSide::BACKWARD);});
 
     controlHandlers.insert(Qt::Key_Q, [this]() -> void {camera->incMovementSpeed(-DELTA_MOVE_SPEED);});
     controlHandlers.insert(Qt::Key_E, [this]() -> void {camera->incMovementSpeed(DELTA_MOVE_SPEED);});
@@ -111,12 +108,15 @@ void MainWindow::initHandlers() {
 
 void MainWindow::onUpdateTimer() {
 
-    if (!keysActive.isEmpty()) {
-        for (int key : keysActive) {
-            if (moveHandlers.contains(key)) {
-                moveHandlers[key]();
-            }
+    XQueryKeymap(dpy, keysActive);
+    bool isReqUpdate = false;
+    for (KeyCode code : moveHandlers.keys()) {
+        if (!!(keysActive[code >> 3] & (1 << (code & 7)))) {
+            moveHandlers[code]();
+            isReqUpdate = true;
         }
+    }
+    if (isReqUpdate) {
         requestUpdate();
     }
 }
