@@ -4,6 +4,7 @@
 #include "../common/const.h"
 
 QVector3D nullVector = QVector3D{};
+QVector3D identifyVector = QVector3D{1, 1, 1};
 
 QMatrix4x4 matrix::scale_move(const QVector3D &scale, const QVector3D &transposition) {
     float data[] = {
@@ -20,11 +21,11 @@ QMatrix4x4 matrix::scale(const QVector3D &scale) {
 }
 
 QMatrix4x4 matrix::move(const QVector3D &transposition) {
-    return scale_move(nullVector, transposition);
+    return scale_move(identifyVector, transposition);
 }
 
 QMatrix4x4 matrix::identify() {
-    return scale_move(nullVector, nullVector);
+    return scale_move(identifyVector, nullVector);
 }
 
 QMatrix4x4 matrix::view(const QVector3D &eye, const QVector3D &target, const QVector3D &up) {

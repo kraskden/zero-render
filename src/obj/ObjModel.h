@@ -7,9 +7,15 @@
 typedef const QVector3D* Point;
 typedef QList<Point> Face;
 
+struct Vertex {
+    QVector3D* point;
+    QVector3D* normal;
+};
+
 class ObjModel {
 
     QList<QVector3D>* points;
+    QList<QVector3D>* normals;
     QList<QList<int>>* polygons;
     QList<Face>* faces;
 

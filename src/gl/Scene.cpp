@@ -15,7 +15,11 @@ QVector3D Scene::lightFront = QVector3D{0, 0, -1};
 Scene::Scene(int width, int height, QObject *parent) :
         QObject(parent), painter(nullptr, nullptr, nullptr, 0), width(width), height(height) {
 
-    models.append(parseObjFile(modelPath));
+    models.append(new Model3D(parseObjFile(modelPath), matrix::identify()));
+    // TODO: Light source movement
+//    models.append(new Model3D(parseObjFile("Cube/Model.obj"),
+//                              matrix::scale_move({0.2, 0.2, 0.2}, {0, 0, 10}),
+//                              ModelType::LIGHT_SOURCE));
     createBuffers();
 }
 
@@ -60,13 +64,12 @@ bool is_vec_drop(const QVector4D& vec) {
     return (abs(vec.x()) > w) || (abs(vec.y()) > w) || (abs(vec.z()) > w);
 }
 
-void Scene::paintModel(ObjModel *model) {
-    QMatrix4x4 mod = matrix::scale(QVector3D{1,1,1});
+void Scene::paintModel(Model3D *model) {
     QMatrix4x4 viewport = matrix::viewport(width, height);
     QMatrix4x4 view = camera->getViewMatrix();
     QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, FOV, Z_NEAR, Z_FAR);
 
-    QMatrix4x4 projectionView = projection  * view * mod;
+    QMatrix4x4 projectionView = projection  * view * model->getWorldMatrix();
 
     QList<QList<Point>>& faces = model->getFaces();
     QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
@@ -85,6 +88,11 @@ void Scene::paintModel(ObjModel *model) {
         QVector3D n = QVector3D::crossProduct((*face[2] - *face[0]), (*face[1] - *face[0])).normalized();
         float intensity = QVector3D::dotProduct(n, lightFront);
         if (intensity < 0) intensity = 0;
+
+        if (model->getType() == ModelType::LIGHT_SOURCE) {
+            visibility = 1;
+            intensity = 1;
+        }
 
         if (visibility > 0 ) {
             this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),

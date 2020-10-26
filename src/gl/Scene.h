@@ -4,9 +4,9 @@
 #include <QtCore/QObject>
 #include <QtGui/QPainter>
 #include <QtCore/QMutex>
-#include "../obj/ObjModel.h"
 #include "GlPainter.h"
 #include "Camera.h"
+#include "../obj/Model3D.h"
 
 class Scene : public QObject {
     Q_OBJECT
@@ -16,7 +16,7 @@ private:
     QAtomicInt* atomics = nullptr;
     volatile int* zBuffer = nullptr;
 
-    QList<ObjModel*> models;
+    QList<Model3D*> models;
 
     GlPainter painter;
     int width;
@@ -26,7 +26,7 @@ private:
 
     static QVector3D lightFront;
 
-    void paintModel(ObjModel* model);
+    void paintModel(Model3D *model);
 
 public slots:
     void repaint(QPainter *qPainter);
