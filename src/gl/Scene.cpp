@@ -71,13 +71,13 @@ void Scene::paintModel(Model3D *model) {
 
     QMatrix4x4 projectionView = projection  * view * model->getWorldMatrix();
 
-    QList<QList<Point>>& faces = model->getFaces();
+    QList<Face>& faces = model->getFaces();
     QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
         QVector4D projs[3];
         QVector4D screens[3];
 
         for (int i = 0 ; i < 3; ++i) {
-            projs[i] = projectionView * QVector4D(*face[i], 1);
+            projs[i] = projectionView * QVector4D(*face[i].point, 1);
             if (is_vec_drop(projs[i])) return;
             screens[i] = viewport * projs[i];
             norm_vec(screens[i]);
@@ -85,7 +85,8 @@ void Scene::paintModel(Model3D *model) {
         QVector3D a = (screens[2] - screens[0]).toVector3D();
         QVector3D b = (screens[1] - screens[0]).toVector3D();
         float visibility = a.x() * b.y() - a.y() * b.x();
-        QVector3D n = QVector3D::crossProduct((*face[2] - *face[0]), (*face[1] - *face[0])).normalized();
+        QVector3D n = QVector3D::crossProduct((*face[2].point - *face[0].point),
+                                              (*face[1].point - *face[0].point)).normalized();
         float intensity = QVector3D::dotProduct(n, lightFront);
         if (intensity < 0) intensity = 0;
 

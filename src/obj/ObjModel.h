@@ -3,30 +3,31 @@
 
 #include <QList>
 #include <QVector3D>
-
-typedef const QVector3D* Point;
-typedef QList<Point> Face;
+#include "../math/Vec3i.h"
 
 struct Vertex {
-    QVector3D* point;
-    QVector3D* normal;
+    const QVector3D* point;
+    const QVector3D* normal;
 };
+typedef QList<Vertex> Face;
+
+struct IdxVertex {
+    int pointIdx;
+    int normalIdx;
+};
+
+typedef QList<IdxVertex> IdxFace;
 
 class ObjModel {
 
     QList<QVector3D>* points;
     QList<QVector3D>* normals;
-    QList<QList<int>>* polygons;
     QList<Face>* faces;
 
 public:
-    ObjModel(QList<QVector3D> *points, QList<QList<int>> *polygons);
+    ObjModel(QList<QVector3D> *points, QList<QVector3D>* normals, QList<IdxFace>* idxFaces);
 
     QList<Face>& getFaces() const;
-
-    QList<QVector3D>& getPoints() const;
-
-    QList<QList<int>>& getPolygons() const;
 
     virtual ~ObjModel();
 };

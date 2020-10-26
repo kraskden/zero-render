@@ -4,11 +4,12 @@
 #include "Parser.h"
 
 QVector3D getPoint(const QStringList& parseLine);
-void processPolygon(const QStringList& parseLine, QList<QList<int>>* polygons);
+void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces);
 
 ObjModel *parseObjFile(const QString& path) {
     auto *points = new QList<QVector3D>{};
-    auto *polygons = new QList<QList<int>>{};
+    auto *normals = new QList<QVector3D>{};
+    auto *idxFaces = new QList<IdxFace>{};
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
         QTextStream in(&file);
@@ -16,8 +17,11 @@ ObjModel *parseObjFile(const QString& path) {
             QStringList list = in.readLine().split(' ');
             if (list[0] == 'v') {
                 points->append(getPoint(list));
-            } else if (list[0] == 'f') {
-                processPolygon(list, polygons);
+            } else if (list[0] == "vn") {
+                normals->append(getPoint(list));
+            }
+            else if (list[0] == 'f') {
+                processFaceIndexes(list, idxFaces);
             }
         }
         file.close();
@@ -25,22 +29,20 @@ ObjModel *parseObjFile(const QString& path) {
     } else {
         qDebug() << "Cannot open model file";
     }
-    return new ObjModel(points, polygons);
+    return new ObjModel(points, normals, idxFaces);
 }
 
 QVector3D getPoint(const QStringList& parseLine) {
     return {parseLine[1].toFloat(), parseLine[2].toFloat(), parseLine[3].toFloat()};
 }
 
-void processPolygon(const QStringList& parseLine, QList<QList<int>>* polygons) {
-    QList<int> pointList;
+void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) {
+    QList<IdxVertex> idxVertexes;
     for (int i = 1; i < parseLine.length(); ++i) {
         QString pointEntry = parseLine[i];
-        int idx = pointEntry.indexOf(QChar('/'));
-        if (idx != -1) {
-            pointEntry.remove(idx, pointEntry.length() - idx);
-        }
-        pointList.append(pointEntry.toInt());
+        QStringList idxes = pointEntry.split('/');
+        idxVertexes.append({idxes[0].toInt(), idxes[2].toInt()});
     }
-    polygons->append(pointList);
+
+    idxFaces->append(idxVertexes);
 }

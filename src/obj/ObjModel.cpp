@@ -1,29 +1,26 @@
 #include "ObjModel.h"
 
-ObjModel::ObjModel(QList<QVector3D> *points, QList<QList<int>> *polygons) : points(points), polygons(polygons) {
+ObjModel::ObjModel(QList<QVector3D> *points, QList<QVector3D> *normals, QList<IdxFace>* idxFaces) : points(points), normals(normals) {
     faces = new QList<Face>{};
     int pointsLen = points->size();
-    for (const QList<int>& polygon : *polygons) {
-        QList<Point> shape;
-        for (int pointIdx : polygon) {
-            pointIdx < 0 ? pointIdx += pointsLen : pointIdx -= 1;
-            shape.append(&points->at(pointIdx));
+    int normalsLen = normals->size();
+    for (IdxFace& idxFace : *idxFaces) {
+        QList<Vertex> shape;
+        for (IdxVertex& idxVertex : idxFace) {
+            idxVertex.pointIdx < 0 ? idxVertex.pointIdx += pointsLen : idxVertex.pointIdx -= 1;
+            idxVertex.normalIdx < 0 ? idxVertex.normalIdx += normalsLen : idxVertex.normalIdx -= 1;
+            Vertex vtx = {&points->at(idxVertex.pointIdx), &normals->at(idxVertex.normalIdx)};
+            shape.append(vtx);
         }
         faces->append(shape);
     }
+    delete idxFaces;
 }
 
-QList<QVector3D>& ObjModel::getPoints() const {
-    return *points;
-}
-
-QList<QList<int>>& ObjModel::getPolygons() const {
-    return *polygons;
-}
 
 ObjModel::~ObjModel() {
     delete points;
-    delete polygons;
+    delete normals;
     delete faces;
 }
 
