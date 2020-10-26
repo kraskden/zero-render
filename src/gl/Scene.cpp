@@ -73,17 +73,14 @@ void Scene::paintModel(Model3D *model) {
 
     QList<Face>& faces = model->getFaces();
     QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
-        QVector4D projs[3];
-        QVector4D screens[3];
-
         for (int i = 0 ; i < 3; ++i) {
-            projs[i] = projectionView * QVector4D(*face[i].point, 1);
-            if (is_vec_drop(projs[i])) return;
-            screens[i] = viewport * projs[i];
-            norm_vec(screens[i]);
+            QVector4D proj = projectionView * QVector4D(*face[i].point, 1);
+            if (is_vec_drop(proj)) return;
+            face[i].screen = viewport * proj;
+            norm_vec(face[i].screen);
         }
-        QVector3D a = (screens[2] - screens[0]).toVector3D();
-        QVector3D b = (screens[1] - screens[0]).toVector3D();
+        QVector3D a = (face[2].screen - face[0].screen).toVector3D();
+        QVector3D b = (face[1].screen - face[0].screen).toVector3D();
         float visibility = a.x() * b.y() - a.y() * b.x();
         QVector3D n = QVector3D::crossProduct((*face[2].point - *face[0].point),
                                               (*face[1].point - *face[0].point)).normalized();
@@ -96,7 +93,7 @@ void Scene::paintModel(Model3D *model) {
         }
 
         if (visibility > 0 ) {
-            this->painter.asyncTriangle(screens[0].toVector3D(), screens[1].toVector3D(), screens[2].toVector3D(),
+            this->painter.asyncTriangle(face[0].screen.toVector3D(), face[1].screen.toVector3D(), face[2].screen.toVector3D(),
                                         intensity);
         }
     });
