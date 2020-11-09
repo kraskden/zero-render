@@ -7,19 +7,21 @@
 #include "../math/Matrix4D.h"
 #include "../obj/Parser.h"
 #include "../common/const.h"
+#include "../common/tbuffer.h"
 
 #include <QtConcurrent/QtConcurrentMap>
+#include <QtConcurrent/QtConcurrent>
 
 QVector3D Scene::lightFront = QVector3D{0, 0, -1};
 
 Scene::Scene(int width, int height, QObject *parent) :
-        QObject(parent), painter(nullptr, nullptr, nullptr, 0), width(width), height(height) {
+        QObject(parent), painter(nullptr, nullptr, nullptr, nullptr, 0), width(width), height(height) {
 
     models.append(new Model3D(parseObjFile(modelPath), matrix::identify()));
     // TODO: Light source movement
 //    models.append(new Model3D(parseObjFile("Cube/Model.obj"),
 //                              matrix::scale_move({0.2, 0.2, 0.2}, {0, 0, 10}),
-//                              ModelType::LIGHT_SOURCE));
+//                              ModelType::ENTITY));
     createBuffers();
 }
 
@@ -29,10 +31,11 @@ Scene::~Scene() {
 
 void Scene::repaint(QPainter *qPainter) {
     std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::max());
+    std::fill(tBuffer, tBuffer + width * height, nullptr);
     QImage world = QImage(width, height, QImage::Format_RGB32);
     world.fill(QColorConstants::Cyan);
 
-    this->painter = GlPainter(&world, atomics, zBuffer, width);
+    this->painter = GlPainter(&world, atomics, zBuffer, tBuffer, width);
 
     for (auto model : models) {
         paintModel(model);
@@ -68,11 +71,13 @@ void Scene::paintModel(Model3D *model) {
     QMatrix4x4 viewport = matrix::viewport(width, height);
     QMatrix4x4 view = camera->getViewMatrix();
     QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, FOV, Z_NEAR, Z_FAR);
-
     QMatrix4x4 projectionView = projection  * view * model->getWorldMatrix();
 
+    QVector3D inverseLight = lightFront;
+    inverseLight *= -1.f;
+
     QList<Face>& faces = model->getFaces();
-    QFuture<void> paintLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
+    QFuture<void> computeLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
         for (int i = 0 ; i < 3; ++i) {
             QVector4D proj = projectionView * QVector4D(*face[i].point, 1);
             if (is_vec_drop(proj)) return;
@@ -82,22 +87,19 @@ void Scene::paintModel(Model3D *model) {
         QVector3D a = (face[2].screen - face[0].screen).toVector3D();
         QVector3D b = (face[1].screen - face[0].screen).toVector3D();
         float visibility = a.x() * b.y() - a.y() * b.x();
-        QVector3D n = QVector3D::crossProduct((*face[2].point - *face[0].point),
-                                              (*face[1].point - *face[0].point)).normalized();
-        float intensity = QVector3D::dotProduct(n, lightFront);
-        if (intensity < 0) intensity = 0;
-
-        if (model->getType() == ModelType::LIGHT_SOURCE) {
-            visibility = 1;
-            intensity = 1;
-        }
-
         if (visibility > 0 ) {
-            this->painter.asyncTriangle(face[0].screen.toVector3D(), face[1].screen.toVector3D(), face[2].screen.toVector3D(),
-                                        intensity);
+            this->painter.fillTBuffer(&face, face[0].screen.toVector3D(), face[1].screen.toVector3D(),
+                                      face[2].screen.toVector3D());
         }
     });
-
+    computeLoop.waitForFinished();
+    Face** start = tBuffer;
+    Face** end = tBuffer + width * height;
+    QFuture<void> paintLoop = QtConcurrent::map(start, end, [&](Face*& face) -> void {
+        if (!face) {return;}
+        int idx = &face - start;
+        painter.putLightPoint(*face, idx, inverseLight);
+    });
     paintLoop.waitForFinished();
 }
 
@@ -147,6 +149,8 @@ void Scene::debugPrint(QPainter *qPainter) {
 void Scene::createBuffers() {
     delete [] zBuffer;
     delete [] atomics;
+    delete [] tBuffer;
     atomics = new QAtomicInt[width * height];
     zBuffer = new volatile int[width * height];
+    tBuffer = new Face*[width * height];
 }

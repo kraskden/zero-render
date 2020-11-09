@@ -37,7 +37,7 @@ public:
             : QObject(parent), eye(eye), yaw(yaw), pitch(pitch), movementSpeed(movementSpeed),
               rotateSpeed(rotateSpeed) {
         up = QVector3D{0, 1, 0};
-        worldUp = QVector3D{0, 1, 0};\
+        worldUp = QVector3D{0, 1, 0};
         updateCameraVectors();
     }
 

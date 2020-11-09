@@ -5,8 +5,8 @@
 #include "Scene.h"
 
 
-GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, volatile int *zBuffer, int width)
-        : world(world), atomics(atomics), zBuffer(zBuffer), width(width) {}
+GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, volatile int *zBuffer, Face** tBuffer, int width)
+        : world(world), atomics(atomics), zBuffer(zBuffer), tBuffer(tBuffer), width(width) {}
 
 void GlPainter::asyncLine(int x1, int y1, int x2, int y2, QRgb color) {
     int dx = abs(x2 - x1);
@@ -63,5 +63,81 @@ void GlPainter::asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity) {
         }
     }
 }
+
+void GlPainter::fillTBuffer(Face *face, Vec3i t0, Vec3i t1, Vec3i t2) {
+    if (t0.y==t1.y && t0.y==t2.y) return;
+    if (t0.y>t1.y) std::swap(t0, t1);
+    if (t0.y>t2.y) std::swap(t0, t2);
+    if (t1.y>t2.y) std::swap(t1, t2);
+    int total_height = t2.y-t0.y;
+    for (int i=0; i<total_height; i++) {
+        bool second_half = i>t1.y-t0.y || t1.y==t0.y;
+        int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
+        float alpha = (float)i/total_height;
+        float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/segment_height; // be careful: with above conditions no division by zero here
+        QVector3D A = t0.toVector3D() + (t2-t0)*alpha;
+        QVector3D B = second_half ? t1.toVector3D() + (t2-t1)*beta : t0.toVector3D() + (t1-t0)*beta;
+        if (A.x()>B.x()) std::swap(A, B);
+        for (int j=A.x(); j<=B.x(); j++) {
+            float phi = B.x()==A.x() ? 1. : (float)(j-A.x())/(float)(B.x()-A.x());
+            Vec3i P = (A) + (B-A)*phi;
+            int lockIdx = P.x+P.y*width;
+            lock(lockIdx);
+            if (zBuffer[lockIdx] > P.z) {
+                zBuffer[lockIdx] = P.z;
+                tBuffer[lockIdx] = face;
+            }
+            unlock(lockIdx);
+        }
+    }
+}
+
+void GlPainter::putPoint(int idx) {
+    int y = idx / width;
+    int x = idx % width;
+    QRgb* line = (QRgb*)world->scanLine(y);
+    line[x] = QColor::fromRgb(255, 255, 255).rgb();
+}
+
+QVector3D toBarycentric(const Face &face, float x, float y) {
+    const QVector4D& a = face[0].screen;
+    const QVector4D& b = face[1].screen;
+    const QVector4D& c = face[2].screen;
+
+    float beta_top = (a.y() - c.y()) * x + (c.x() - a.x()) * y + a.x() * c.y() - c.x() * a.y();
+    float beta_bottom = (a.y() - c.y()) * b.x() + (c.x() - a.x()) * b.y() + a.x() * c.y() - c.x() * a.y();
+
+    float gamma_top = (a.y() - b.y()) * x + (b.x() - a.x()) * y + a.x() * b.y() - b.x() * a.y();
+    float gamma_bottom = (a.y() - b.y()) * c.x() + (b.x() - a.x()) * c.y() + a.x() * b.y() - b.x() * a.y();
+
+    float beta = beta_top / beta_bottom;
+    float gamma = gamma_top / gamma_bottom;
+    float alpha = 1 - beta - gamma;
+
+    return QVector3D{alpha, beta, gamma};
+}
+
+void GlPainter::putLightPoint(const Face &face, int pixel, const QVector3D& inverseLight) {
+    int y = pixel / width;
+    int x = pixel % width;
+
+    QVector3D barycentric = toBarycentric(face, (float)x, (float)y);
+    QVector3D nA = face[0].normal->normalized();
+    QVector3D nB = face[1].normal->normalized();
+    QVector3D nC = face[2].normal->normalized();
+
+    QVector3D n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
+
+    float intensity = QVector3D::dotProduct(n, inverseLight);
+    if (intensity < 0) intensity = 0;
+
+    QRgb* line = (QRgb*)world->scanLine(y);
+
+    int coeff = 255 * intensity;
+    if ( coeff < 0 ) {coeff = 0;}
+    line[x] = QColor::fromRgb(coeff, coeff, coeff).rgb();
+//    putPoint(pixel);
+}
+
 
 
