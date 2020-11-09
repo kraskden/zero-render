@@ -8,6 +8,7 @@
 #include "../obj/Parser.h"
 #include "../common/const.h"
 #include "../common/tbuffer.h"
+#include "../math/Algorythm.h"
 
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrent>
@@ -73,8 +74,9 @@ void Scene::paintModel(Model3D *model) {
     QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, FOV, Z_NEAR, Z_FAR);
     QMatrix4x4 projectionView = projection  * view * model->getWorldMatrix();
 
-    QVector3D inverseLight = lightFront;
+    QVector3D inverseLight = lightFront.normalized();
     inverseLight *= -1.f;
+    QVector3D viewFront = camera->getFront().normalized();
 
     QList<Face>& faces = model->getFaces();
     QFuture<void> computeLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
@@ -98,7 +100,7 @@ void Scene::paintModel(Model3D *model) {
     QFuture<void> paintLoop = QtConcurrent::map(start, end, [&](Face*& face) -> void {
         if (!face) {return;}
         int idx = &face - start;
-        painter.putLightPoint(*face, idx, inverseLight);
+        painter.putLightPoint(*face, idx, inverseLight, viewFront);
     });
     paintLoop.waitForFinished();
 }

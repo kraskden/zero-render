@@ -23,7 +23,7 @@ public:
     void fillTBuffer(Face* face, Vec3i t0, Vec3i t1, Vec3i t2);
     void putPoint(int idx);
 
-    void putLightPoint(const Face &face, int pixel, const QVector3D& inverseLight);
+    void putLightPoint(const Face &face, int pixel, const QVector3D &inverseLight, const QVector3D &viewFront);
 
 private:
     inline void lock(int lockIdx) {

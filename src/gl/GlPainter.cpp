@@ -3,6 +3,8 @@
 #include <cmath>
 
 #include "Scene.h"
+#include "../math/Algorythm.h"
+#include "../common/const.h"
 
 
 GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, volatile int *zBuffer, Face** tBuffer, int width)
@@ -99,44 +101,27 @@ void GlPainter::putPoint(int idx) {
     line[x] = QColor::fromRgb(255, 255, 255).rgb();
 }
 
-QVector3D toBarycentric(const Face &face, float x, float y) {
-    const QVector4D& a = face[0].screen;
-    const QVector4D& b = face[1].screen;
-    const QVector4D& c = face[2].screen;
-
-    float beta_top = (a.y() - c.y()) * x + (c.x() - a.x()) * y + a.x() * c.y() - c.x() * a.y();
-    float beta_bottom = (a.y() - c.y()) * b.x() + (c.x() - a.x()) * b.y() + a.x() * c.y() - c.x() * a.y();
-
-    float gamma_top = (a.y() - b.y()) * x + (b.x() - a.x()) * y + a.x() * b.y() - b.x() * a.y();
-    float gamma_bottom = (a.y() - b.y()) * c.x() + (b.x() - a.x()) * c.y() + a.x() * b.y() - b.x() * a.y();
-
-    float beta = beta_top / beta_bottom;
-    float gamma = gamma_top / gamma_bottom;
-    float alpha = 1 - beta - gamma;
-
-    return QVector3D{alpha, beta, gamma};
-}
-
-void GlPainter::putLightPoint(const Face &face, int pixel, const QVector3D& inverseLight) {
+void GlPainter::putLightPoint(const Face &face, int pixel, const QVector3D &inverseLight, const QVector3D &viewFront) {
     int y = pixel / width;
     int x = pixel % width;
+
+    float ambient = MAX_COLOR * AMBIENT_WEIGHT;
 
     QVector3D barycentric = toBarycentric(face, (float)x, (float)y);
     QVector3D nA = face[0].normal->normalized();
     QVector3D nB = face[1].normal->normalized();
     QVector3D nC = face[2].normal->normalized();
-
     QVector3D n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
 
-    float intensity = QVector3D::dotProduct(n, inverseLight);
-    if (intensity < 0) intensity = 0;
+    float diffuse = MAX_COLOR * DIFFUSE_WEIGHT * std::max(QVector3D::dotProduct(n, inverseLight), 0.f);
 
+    QVector3D lightReflect = reflect(viewFront, n).normalized();
+    float specular = MAX_COLOR * SPECULAR_WEIGHT *
+                     powf(std::max(QVector3D::dotProduct(lightReflect, viewFront), 0.f) , SPECULAR_POWER);
+
+    int color = std::max(std::min((int)(ambient + diffuse + specular), MAX_COLOR), 0);
     QRgb* line = (QRgb*)world->scanLine(y);
-
-    int coeff = 255 * intensity;
-    if ( coeff < 0 ) {coeff = 0;}
-    line[x] = QColor::fromRgb(coeff, coeff, coeff).rgb();
-//    putPoint(pixel);
+    line[x] = QColor::fromRgb(color, color, color).rgb();
 }
 
 

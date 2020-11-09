@@ -47,6 +47,4 @@ void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) 
         QList<IdxVertex> idxFace = {idxVertexes[0], idxVertexes[i], idxVertexes[i + 1]};
         idxFaces->append(idxFace);
     }
-//
-//    idxFaces->append(idxVertexes);
 }

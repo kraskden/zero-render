@@ -5,6 +5,14 @@
 
 #define UPDATE_TIMER_TIMEOUT 16
 
+#define SPECULAR_POWER 32
+
+#define AMBIENT_WEIGHT 0.1
+#define DIFFUSE_WEIGHT 0.9
+#define SPECULAR_WEIGHT 0.5
+
+#define MAX_COLOR 255
+
 #define Z_NEAR 0.4
 #define Z_FAR 1000.0
 #define DEPTH 200000

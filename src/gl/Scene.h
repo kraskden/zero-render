@@ -13,7 +13,7 @@ class Scene : public QObject {
 
     // TODO: Change light front
 private:
-    const QString modelPath = "shovel.obj";
+    const QString modelPath = "Ship/Model.obj";
     QAtomicInt* atomics = nullptr;
     volatile int* zBuffer = nullptr;
     Face** tBuffer = nullptr;
