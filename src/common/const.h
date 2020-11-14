@@ -9,7 +9,7 @@
 
 #define AMBIENT_WEIGHT 0.1
 #define DIFFUSE_WEIGHT 0.9
-#define SPECULAR_WEIGHT 0.5
+#define SPECULAR_WEIGHT 0.1
 
 #define MAX_COLOR 255
 
@@ -26,5 +26,8 @@
 
 #define DELTA_MOVE_SPEED 0.01
 #define DELTA_ROTATE_SPEED (M_PI / 400.0)
+
+#define LIGHT_RADIUS 10
+
 
 #endif //GLPAINTER_CONST_H

@@ -23,6 +23,10 @@ MainWindow::MainWindow(QWindow *parent) :
                               DEF_MOVE_SPEED, DEF_ROTATE_SPEED, this);
     scene->setCamera(camera);
 
+    lightSource = new LightSource(QVector3D(0, 0, 0), LIGHT_RADIUS, 0,
+                                  0, DEF_ROTATE_SPEED, this);
+    scene->setLightSource(lightSource);
+
     dpy = XOpenDisplay(nullptr);
     XSetInputFocus(dpy, this->winId(), RevertToNone, CurrentTime);
 
@@ -99,12 +103,18 @@ void MainWindow::initHandlers() {
     moveHandlers.insert(key2code(XK_semicolon), [this]() -> void{camera->move(CamMov::YAW, CamSide::FORWARD);});
     moveHandlers.insert(key2code(XK_o), [this]() -> void{camera->move(CamMov::PITCH, CamSide::FORWARD);});
     moveHandlers.insert(key2code(XK_l), [this]() -> void{camera->move(CamMov::PITCH, CamSide::BACKWARD);});
+    // Light source
+    moveHandlers.insert(key2code(XK_Left), [this]() -> void {lightSource->changeAzimuth(-1);});
+    moveHandlers.insert(key2code(XK_Right), [this]() -> void {lightSource->changeAzimuth(1); });
+    moveHandlers.insert(key2code(XK_Up), [this]() -> void {lightSource->changeAltitude(1); });
+    moveHandlers.insert(key2code(XK_Down), [this]() -> void {lightSource->changeAltitude(-1); });
 
     controlHandlers.insert(Qt::Key_Q, [this]() -> void {camera->incMovementSpeed(-DELTA_MOVE_SPEED);});
     controlHandlers.insert(Qt::Key_E, [this]() -> void {camera->incMovementSpeed(DELTA_MOVE_SPEED);});
     controlHandlers.insert(Qt::Key_I, [this]() -> void {camera->incRotateSpeed(-DELTA_ROTATE_SPEED);});
     controlHandlers.insert(Qt::Key_P, [this]() -> void {camera->incRotateSpeed(DELTA_ROTATE_SPEED);});
     controlHandlers.insert(Qt::Key_R, [this]() -> void {camera->reset(QVector3D{0, 0, DEF_CAMERA_Z}, DEF_CAMERA_YAW, DEF_CAMERA_PITCH);});
+    controlHandlers.insert(Qt::Key_Shift, [this]() -> void{lightSource->reset(LIGHT_RADIUS, 0, 0);});
 }
 
 void MainWindow::onUpdateTimer() {

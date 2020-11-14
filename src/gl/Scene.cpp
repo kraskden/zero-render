@@ -21,7 +21,7 @@ Scene::Scene(int width, int height, QObject *parent) :
     models.append(new Model3D(parseObjFile(modelPath), matrix::identify()));
     // TODO: Light source movement
 //    models.append(new Model3D(parseObjFile("Cube/Model.obj"),
-//                              matrix::scale_move({0.2, 0.2, 0.2}, {0, 0, 10}),
+//                          matrix::scale_move({0.2, 0.2, 0.2}, {0, 0, 10}),
 //                              ModelType::ENTITY));
     createBuffers();
 }
@@ -74,7 +74,8 @@ void Scene::paintModel(Model3D *model) {
     QMatrix4x4 projection = matrix::projection_rel(width * 1.0 / height, FOV, Z_NEAR, Z_FAR);
     QMatrix4x4 projectionView = projection  * view * model->getWorldMatrix();
 
-    QVector3D inverseLight = lightFront.normalized();
+    QVector3D inverseLight = lightSource->getFront();
+//    QVector3D inverseLight = lightFront.normalized();
     inverseLight *= -1.f;
     QVector3D viewFront = camera->getFront().normalized();
 
@@ -135,13 +136,17 @@ void Scene::debugPrint(QPainter *qPainter) {
 
     const QVector3D& eye = camera->getEye();
 
-    QString text = QString("Eye: %1\nFront: %2\nPitch: %3\nYaw: %4\nMove speed:  %5\nRotate speed: %6")
+    QString text = QString("Eye: %1\nFront: %2\nPitch: %3\nYaw: %4\nMove speed:  %5\nRotate speed: %6\n"
+                           "Light Front: %7\nAzimuth: %8\nAltitude: %9")
             .arg(vec2str(eye))
             .arg(vec2str(camera->getFront()))
             .arg(deg2str(rad2deg(camera->getPitch())))
             .arg(deg2str(rad2deg(camera->getYaw())))
             .arg(float2str(camera->getMovementSpeed()))
-            .arg( float2str(rad2deg(camera->getRotateSpeed()), 1));
+            .arg( float2str(rad2deg(camera->getRotateSpeed()), 1))
+            .arg(vec2str(lightSource->getFront()))
+            .arg(deg2str(rad2deg(lightSource->getAzimuth())))
+            .arg(deg2str(rad2deg(lightSource->getAltitude())));
 
     qPainter->drawText(QRect(0, 0, 1000, 1000), text);
 
@@ -155,4 +160,8 @@ void Scene::createBuffers() {
     atomics = new QAtomicInt[width * height];
     zBuffer = new volatile int[width * height];
     tBuffer = new Face*[width * height];
+}
+
+void Scene::setLightSource(LightSource *lightSource) {
+    Scene::lightSource = lightSource;
 }

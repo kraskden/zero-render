@@ -3,6 +3,7 @@
 
 #include <QtGui/QWindow>
 #include "../gl/Scene.h"
+#include "../gl/LightSource.h"
 #include <QSet>
 #include <QMap>
 #include <QTimer>
@@ -19,6 +20,7 @@ class MainWindow : public  QWindow
     QBackingStore *m_backingStore;
     Scene* scene;
     Camera* camera;
+    LightSource* lightSource;
     QTimer* updateTimer;
 
     QMap<KeyCode, std::function<void()>> moveHandlers;

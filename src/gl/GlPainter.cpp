@@ -115,7 +115,7 @@ void GlPainter::putLightPoint(const Face &face, int pixel, const QVector3D &inve
 
     float diffuse = MAX_COLOR * DIFFUSE_WEIGHT * std::max(QVector3D::dotProduct(n, inverseLight), 0.f);
 
-    QVector3D lightReflect = reflect(viewFront, n).normalized();
+    QVector3D lightReflect = reflect(inverseLight, n).normalized();
     float specular = MAX_COLOR * SPECULAR_WEIGHT *
                      powf(std::max(QVector3D::dotProduct(lightReflect, viewFront), 0.f) , SPECULAR_POWER);
 

@@ -7,13 +7,14 @@
 #include "GlPainter.h"
 #include "Camera.h"
 #include "../obj/Model3D.h"
+#include "LightSource.h"
 
 class Scene : public QObject {
     Q_OBJECT
-
-    // TODO: Change light front
 private:
-    const QString modelPath = "Ship/Model.obj";
+//    const QString modelPath = "m3.obj";
+    const QString modelPath = "shovel.obj";
+
     QAtomicInt* atomics = nullptr;
     volatile int* zBuffer = nullptr;
     Face** tBuffer = nullptr;
@@ -25,6 +26,7 @@ private:
     int height;
 
     Camera* camera;
+    LightSource* lightSource;
 
     static QVector3D lightFront;
 
@@ -41,6 +43,8 @@ public:
     void setHeight(int height);
 
     void setCamera(Camera* camera);
+
+    void setLightSource(LightSource *lightSource);
 
     ~Scene() override;
 
