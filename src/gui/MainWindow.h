@@ -47,6 +47,7 @@ protected:
 
 private:
     void initHandlers();
+    void loadModel();
     inline KeyCode key2code(KeySym keySym)  {return XKeysymToKeycode(dpy, keySym); }
 };
 

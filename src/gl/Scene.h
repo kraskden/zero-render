@@ -12,14 +12,12 @@
 class Scene : public QObject {
     Q_OBJECT
 private:
-//    const QString modelPath = "m3.obj";
-    const QString modelPath = "shovel.obj";
 
     QAtomicInt* atomics = nullptr;
     volatile int* zBuffer = nullptr;
     Face** tBuffer = nullptr;
 
-    QList<Model3D*> models;
+    Model3D* model = nullptr;
 
     GlPainter painter;
     int width;
@@ -45,6 +43,8 @@ public:
     void setCamera(Camera* camera);
 
     void setLightSource(LightSource *lightSource);
+
+    void setModel(Model3D *model);
 
     ~Scene() override;
 

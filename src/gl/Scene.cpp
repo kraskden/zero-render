@@ -4,43 +4,34 @@
 #include "Scene.h"
 #include <cmath>
 #include <QtCore/QMutex>
-#include "../math/Matrix4D.h"
-#include "../obj/Parser.h"
 #include "../common/const.h"
-#include "../common/tbuffer.h"
 #include "../math/Algorythm.h"
 
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrent>
 
-QVector3D Scene::lightFront = QVector3D{0, 0, -1};
-
 Scene::Scene(int width, int height, QObject *parent) :
-        QObject(parent), painter(nullptr, nullptr, nullptr, nullptr, 0), width(width), height(height) {
+    QObject(parent), painter(nullptr, nullptr, nullptr, nullptr, 0), width(width), height(height) {
 
-    models.append(new Model3D(parseObjFile(modelPath), matrix::identify()));
-    // TODO: Light source movement
-//    models.append(new Model3D(parseObjFile("Cube/Model.obj"),
-//                          matrix::scale_move({0.2, 0.2, 0.2}, {0, 0, 10}),
-//                              ModelType::ENTITY));
     createBuffers();
 }
 
 Scene::~Scene() {
-    qDeleteAll(models.begin(), models.end());
+    delete model;
 }
 
 void Scene::repaint(QPainter *qPainter) {
+    if (!model || !model->obj()) {
+        return;
+    }
+
     std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::max());
     std::fill(tBuffer, tBuffer + width * height, nullptr);
     QImage world = QImage(width, height, QImage::Format_RGB32);
-    world.fill(QColorConstants::Cyan);
+    world.fill(BACKGROUND_COLOR);
 
     this->painter = GlPainter(&world, atomics, zBuffer, tBuffer, width);
-
-    for (auto model : models) {
-        paintModel(model);
-    }
+    paintModel(model);
 
     qPainter->drawImage(0, 0, world);
     debugPrint(qPainter);
@@ -75,7 +66,6 @@ void Scene::paintModel(Model3D *model) {
     QMatrix4x4 projectionView = projection  * view * model->getWorldMatrix();
 
     QVector3D inverseLight = lightSource->getFront();
-//    QVector3D inverseLight = lightFront.normalized();
     inverseLight *= -1.f;
     QVector3D viewFront = camera->getFront().normalized();
 
@@ -164,4 +154,9 @@ void Scene::createBuffers() {
 
 void Scene::setLightSource(LightSource *lightSource) {
     Scene::lightSource = lightSource;
+}
+
+void Scene::setModel(Model3D *model) {
+    delete this->model;
+    this->model = model;
 }

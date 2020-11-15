@@ -1,6 +1,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QBackingStore>
 #include <QtGui/QResizeEvent>
+#include <QFileDialog>
 
 #include <QDebug>
 #include <cmath>
@@ -11,6 +12,9 @@
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+
+#include "../math/Matrix4D.h"
+#include "../obj/Parser.h"
 
 
 
@@ -115,6 +119,8 @@ void MainWindow::initHandlers() {
     controlHandlers.insert(Qt::Key_P, [this]() -> void {camera->incRotateSpeed(DELTA_ROTATE_SPEED);});
     controlHandlers.insert(Qt::Key_R, [this]() -> void {camera->reset(QVector3D{0, 0, DEF_CAMERA_Z}, DEF_CAMERA_YAW, DEF_CAMERA_PITCH);});
     controlHandlers.insert(Qt::Key_Shift, [this]() -> void{lightSource->reset(LIGHT_RADIUS, 0, 0);});
+
+    controlHandlers.insert(Qt::Key_F2, [this]() -> void{this->loadModel();});
 }
 
 void MainWindow::onUpdateTimer() {
@@ -132,4 +138,7 @@ void MainWindow::onUpdateTimer() {
     }
 }
 
-
+void MainWindow::loadModel() {
+    QString modelDir =  QFileDialog::getExistingDirectory(nullptr, "Open model directory");
+    scene->setModel(new Model3D(modelDir));
+}

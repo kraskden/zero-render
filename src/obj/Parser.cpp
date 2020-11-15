@@ -9,6 +9,7 @@ void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces);
 ObjModel *parseObjFile(const QString& path) {
     auto *points = new QList<QVector3D>{};
     auto *normals = new QList<QVector3D>{};
+    auto *textures = new QList<QVector3D>{};
     auto *idxFaces = new QList<IdxFace>{};
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
@@ -19,21 +20,26 @@ ObjModel *parseObjFile(const QString& path) {
                 points->append(getPoint(list));
             } else if (list[0] == "vn") {
                 normals->append(getPoint(list));
+            } else if (list[0] == "vt") {
+                textures->append(getPoint(list));
             }
             else if (list[0] == 'f') {
                 processFaceIndexes(list, idxFaces);
             }
         }
         file.close();
-        qDebug() << "Model loaded successfully";
     } else {
         qDebug() << "Cannot open model file";
     }
-    return new ObjModel(points, normals, idxFaces);
+    return new ObjModel(points, normals, textures, idxFaces);
 }
 
 QVector3D getPoint(const QStringList& parseLine) {
-    return {parseLine[1].toFloat(), parseLine[2].toFloat(), parseLine[3].toFloat()};
+    int lastIdx = parseLine.length() - 1;
+    float x = parseLine[1].toFloat();
+    float y = lastIdx < 2 ? 0 : parseLine[2].toFloat();
+    float z = lastIdx < 3 ? 0 : parseLine[3].toFloat();
+    return {x, y, z};
 }
 
 void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) {
@@ -41,7 +47,7 @@ void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) 
     for (int i = 1; i < parseLine.length(); ++i) {
         QString pointEntry = parseLine[i];
         QStringList idxes = pointEntry.split('/');
-        idxVertexes.append({idxes[0].toInt(), idxes[2].toInt()});
+        idxVertexes.append({idxes[0].toInt(), idxes[2].toInt(), idxes[1].toInt()});
     }
     for (int i = 1; i < idxVertexes.length() - 1; ++i) {
         QList<IdxVertex> idxFace = {idxVertexes[0], idxVertexes[i], idxVertexes[i + 1]};

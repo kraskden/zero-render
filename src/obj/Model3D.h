@@ -3,30 +3,46 @@
 
 
 #include <QtGui/QMatrix4x4>
+#include <QtGui/QImage>
 #include "ObjModel.h"
-
-enum ModelType {
-    ENTITY, LIGHT_SOURCE
-};
 
 class Model3D {
     ObjModel* objModel = nullptr;
     QMatrix4x4 worldMatrix;
-    ModelType modelType;
+
+    QImage* diffuse = nullptr;
+    QImage* normal = nullptr;
+    QImage* mirrored = nullptr;
+
 public:
-    Model3D(ObjModel* objModel, QMatrix4x4 worldMatrix, ModelType type = ModelType::ENTITY) {
+    explicit Model3D(QString modelDir);
+
+    Model3D(ObjModel* objModel, QMatrix4x4 worldMatrix) {
         this->objModel = objModel;
         this->worldMatrix = worldMatrix;
-        this->modelType = type;
+    }
+
+    QImage *getDiffuse() const {
+        return diffuse;
+    }
+
+    QImage *getNormal() const {
+        return normal;
+    }
+
+    QImage *getMirrored() const {
+        return mirrored;
     }
 
     QList<Face>& getFaces() {return objModel->getFaces(); }
     const QMatrix4x4& getWorldMatrix() {return worldMatrix;}
-    ModelType getType() {return modelType; }
     const ObjModel* obj() {return objModel;}
 
     ~Model3D() {
         delete objModel;
+        delete diffuse;
+        delete normal;
+        delete mirrored;
     }
 };
 
