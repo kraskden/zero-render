@@ -8,13 +8,14 @@
 
 /* Light constants */
 #define SPECULAR_POWER 32
-#define AMBIENT_WEIGHT 0.1
-#define DIFFUSE_WEIGHT 0.9
-#define SPECULAR_WEIGHT 0.1
+#define AMBIENT_WEIGHT 0.1f
+#define DIFFUSE_WEIGHT 0.9f
+#define SPECULAR_WEIGHT 0.1f
 
 /* Color constants */
-#define MAX_COLOR 255
 #define BACKGROUND_COLOR QColorConstants::Cyan
+#define DIFFUSE_DEF_COLOR QColorConstants::Red
+#define LIGHT_COLOR QColorConstants::White
 
 
 #define Z_NEAR 0.4

@@ -6,12 +6,14 @@
 #include <QtCore/QMutex>
 #include "../math/Vec3i.h"
 #include "../obj/ObjModel.h"
+#include "../obj/Model3D.h"
 
 class GlPainter {
     QImage* world;
     QAtomicInt* atomics;
     volatile int* zBuffer;
     Face** tBuffer;
+    QRgb* screen;
     int width;
 
 public:
@@ -23,7 +25,8 @@ public:
     void fillTBuffer(Face* face, Vec3i t0, Vec3i t1, Vec3i t2);
     void putPoint(int idx);
 
-    void putLightPoint(const Face &face, int pixel, const QVector3D &inverseLight, const QVector3D &viewFront);
+    void putLightPoint(const Model3D *model, const Face &face, int pixel, const QVector3D &inverseLight,
+                       const QVector3D &viewFront);
 
 private:
     inline void lock(int lockIdx) {

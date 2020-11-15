@@ -25,9 +25,10 @@ Model3D::Model3D(QString modelDir) {
         return;
     }
 
-    this->diffuse = new QImage(diffusePath);
-    this->normal = new QImage(normalPath);
-    this->mirrored = new QImage(mirroredPath);
+    diffuse = new QImage(diffusePath);
+    normal = new QImage(normalPath);
+    mirrored = new QImage(mirroredPath);
+
 
     this->worldMatrix = matrix::scale({scale, scale, scale});
     this->objModel = parseObjFile(modelPath);

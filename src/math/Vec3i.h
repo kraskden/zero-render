@@ -3,6 +3,7 @@
 
 
 #include <QtGui/QVector3D>
+#include <QColor>
 #include <cmath>
 
 struct Vec3i {
@@ -13,6 +14,12 @@ struct Vec3i {
         x = v.x() + .5;
         y = v.y() + .5;
         z = v.z() + .5;
+    }
+
+    Vec3i(const QColor& color) {
+        x = color.red();
+        y = color.green();
+        z = color.blue();
     }
 
     Vec3i operator+(const Vec3i& v) const {
@@ -30,6 +37,8 @@ struct Vec3i {
     QVector3D toVector3D() {
         return {(float)x, (float)y, (float)z};
     }
+
+    QRgb toRgb() const;
 };
 
 

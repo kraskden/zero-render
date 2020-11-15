@@ -8,7 +8,11 @@
 
 
 GlPainter::GlPainter(QImage* world, QAtomicInt *atomics, volatile int *zBuffer, Face** tBuffer, int width)
-        : world(world), atomics(atomics), zBuffer(zBuffer), tBuffer(tBuffer), width(width) {}
+        : world(world), atomics(atomics), zBuffer(zBuffer), tBuffer(tBuffer), width(width) {
+    if (world) {
+        screen = (QRgb*)world->bits();
+    }
+}
 
 void GlPainter::asyncLine(int x1, int y1, int x2, int y2, QRgb color) {
     int dx = abs(x2 - x1);
@@ -101,27 +105,37 @@ void GlPainter::putPoint(int idx) {
     line[x] = QColor::fromRgb(255, 255, 255).rgb();
 }
 
-void GlPainter::putLightPoint(const Face &face, int pixel, const QVector3D &inverseLight, const QVector3D &viewFront) {
+void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel, const QVector3D &inverseLight,
+                              const QVector3D &viewFront) {
     int y = pixel / width;
     int x = pixel % width;
-
-    float ambient = MAX_COLOR * AMBIENT_WEIGHT;
+    QImage* diffuseImage = model->getDiffuse();
 
     QVector3D barycentric = toBarycentric(face, (float)x, (float)y);
-    QVector3D nA = face[0].normal->normalized();
-    QVector3D nB = face[1].normal->normalized();
-    QVector3D nC = face[2].normal->normalized();
-    QVector3D n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
+    const QVector3D& tA = *face[0].texture;
+    const QVector3D& tB = *face[1].texture;
+    const QVector3D& tC = *face[2].texture;
+    QVector3D t = (tA * barycentric.x() + tB * barycentric.y() + tC * barycentric.z()).normalized();
+//    printf("%f %f %f %d\n", t.x(), t.y(), t.z(), isnanf(t.x()));
 
-    float diffuse = MAX_COLOR * DIFFUSE_WEIGHT * std::max(QVector3D::dotProduct(n, inverseLight), 0.f);
+    Vec3i diffuseColor = texel(diffuseImage, t, DIFFUSE_DEF_COLOR);
+//    Vec3i diffuseColor = DIFFUSE_DEF_COLOR;
+
+    Vec3i lightColor = LIGHT_COLOR;
+
+    Vec3i ambient = diffuseColor * AMBIENT_WEIGHT;
+
+    const QVector3D& nA = *face[0].normal;
+    const QVector3D& nB = *face[1].normal;
+    const QVector3D& nC = *face[2].normal;
+    QVector3D n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
+    Vec3i diffuse = diffuseColor * DIFFUSE_WEIGHT * std::max(QVector3D::dotProduct(n, inverseLight), 0.f);
 
     QVector3D lightReflect = reflect(inverseLight, n).normalized();
-    float specular = MAX_COLOR * SPECULAR_WEIGHT *
+    Vec3i specular = lightColor * SPECULAR_WEIGHT *
                      powf(std::max(QVector3D::dotProduct(lightReflect, viewFront), 0.f) , SPECULAR_POWER);
 
-    int color = std::max(std::min((int)(ambient + diffuse + specular), MAX_COLOR), 0);
-    QRgb* line = (QRgb*)world->scanLine(y);
-    line[x] = QColor::fromRgb(color, color, color).rgb();
+    screen[pixel] = (ambient + diffuse + specular).toRgb();
 }
 
 

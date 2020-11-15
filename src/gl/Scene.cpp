@@ -91,7 +91,7 @@ void Scene::paintModel(Model3D *model) {
     QFuture<void> paintLoop = QtConcurrent::map(start, end, [&](Face*& face) -> void {
         if (!face) {return;}
         int idx = &face - start;
-        painter.putLightPoint(*face, idx, inverseLight, viewFront);
+        painter.putLightPoint(model, *face, idx, inverseLight, viewFront);
     });
     paintLoop.waitForFinished();
 }

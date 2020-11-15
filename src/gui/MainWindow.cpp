@@ -16,13 +16,15 @@
 #include "../math/Matrix4D.h"
 #include "../obj/Parser.h"
 
-
-
 MainWindow::MainWindow(QWindow *parent) :
         QWindow(parent),
         m_backingStore(new QBackingStore(this)),
         scene(new Scene(width(), height(), this))
 {
+    // TODO: time duration for better camera moving
+
+    scene->setModel(new Model3D("Ship/"));
+
     camera = new Camera(QVector3D(0, 0, DEF_CAMERA_Z), DEF_CAMERA_YAW, DEF_CAMERA_PITCH,
                               DEF_MOVE_SPEED, DEF_ROTATE_SPEED, this);
     scene->setCamera(camera);

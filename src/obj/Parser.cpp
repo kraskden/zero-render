@@ -19,7 +19,7 @@ ObjModel *parseObjFile(const QString& path) {
             if (list[0] == 'v') {
                 points->append(getPoint(list));
             } else if (list[0] == "vn") {
-                normals->append(getPoint(list));
+                normals->append(getPoint(list).normalized());
             } else if (list[0] == "vt") {
                 textures->append(getPoint(list));
             }

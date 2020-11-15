@@ -1,4 +1,5 @@
 #include "Algorythm.h"
+#include <QImage>
 
 QVector3D toBarycentric(const Face &face, float x, float y) {
     const QVector4D& a = face[0].screen;
@@ -21,4 +22,24 @@ QVector3D toBarycentric(const Face &face, float x, float y) {
 QVector3D reflect(const QVector3D &v, const QVector3D &n) {
     // r = d − 2(d⋅n)n
     return v - QVector3D::dotProduct(v, n) * 2 * n;
+}
+
+Vec3i texel(const QImage *image, const QVector3D &pos, const Vec3i &def) {
+    if (isnanf(pos.x()) || isnanf(pos.y())) {
+        return def;
+    }
+//    printf("%f %f\n", pos.x(), pos.y());
+    if (!image || image->isNull()) {
+        return def;
+    }
+    //return def;
+
+    float x = abs(pos.x() * image->width());
+    float y = abs(pos.y() * image->height());
+    int pixelIdx = y * image->width() + x + 0.5;
+    QRgb* data = (QRgb*)image->constBits();
+    auto* pixel = (uint8_t*)(data + pixelIdx);
+//    return {pixel[1], pixel[2], pixel[3]};
+
+    return QColor::fromRgb(data[pixelIdx]);
 }
