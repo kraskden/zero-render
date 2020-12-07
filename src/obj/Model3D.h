@@ -12,7 +12,8 @@ class Model3D {
 
     QImage* diffuse = nullptr;
     QImage* normal = nullptr;
-    QImage* mirrored = nullptr;
+    QImage* specular = nullptr;
+    QImage* emission = nullptr;
 
 public:
     explicit Model3D(QString modelDir);
@@ -30,8 +31,12 @@ public:
         return normal;
     }
 
-    QImage *getMirrored() const {
-        return mirrored;
+    QImage *getSpecular() const {
+        return specular;
+    }
+
+    QImage* getEmission() const {
+        return emission;
     }
 
     QList<Face>& getFaces() {return objModel->getFaces(); }
@@ -42,7 +47,8 @@ public:
         delete objModel;
         delete diffuse;
         delete normal;
-        delete mirrored;
+        delete specular;
+        delete emission;
     }
 };
 

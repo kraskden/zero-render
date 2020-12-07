@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWindow *parent) :
 {
     // TODO: time duration for better camera moving
 
-    scene->setModel(new Model3D("Ship/"));
+    scene->setModel(new Model3D("../resources/Ship"));
 
     camera = new Camera(QVector3D(0, 0, DEF_CAMERA_Z), DEF_CAMERA_YAW, DEF_CAMERA_PITCH,
                               DEF_MOVE_SPEED, DEF_ROTATE_SPEED, this);

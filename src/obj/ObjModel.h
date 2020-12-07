@@ -4,6 +4,7 @@
 #include <QList>
 #include <QVector3D>
 #include <QtGui/QVector4D>
+#include <QtGui/QVector2D>
 #include "../math/Vec3i.h"
 
 struct Vertex {
@@ -11,7 +12,10 @@ struct Vertex {
     const QVector3D* normal;
     const QVector3D* texture;
     QVector4D screen;
+    Vec3i screen2D;
+    QVector2D transTexture;
 };
+
 typedef QList<Vertex> Face;
 
 struct IdxVertex {

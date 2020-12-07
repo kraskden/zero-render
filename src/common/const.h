@@ -7,7 +7,7 @@
 #define MODEL_SETTING_FILE "model.ini"
 
 /* Light constants */
-#define SPECULAR_POWER 32
+#define SPECULAR_POWER 4
 #define AMBIENT_WEIGHT 0.1f
 #define DIFFUSE_WEIGHT 0.9f
 #define SPECULAR_WEIGHT 0.1f

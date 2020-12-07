@@ -92,6 +92,7 @@ void GlPainter::fillTBuffer(Face *face, Vec3i t0, Vec3i t1, Vec3i t2) {
             if (zBuffer[lockIdx] > P.z) {
                 zBuffer[lockIdx] = P.z;
                 tBuffer[lockIdx] = face;
+                putPoint(lockIdx);
             }
             unlock(lockIdx);
         }
@@ -105,38 +106,64 @@ void GlPainter::putPoint(int idx) {
     line[x] = QColor::fromRgb(255, 255, 255).rgb();
 }
 
+float texelToNormal(QRgb texel) {
+    return ((float)texel / 255) * 2 - 1;
+}
+
+bool isImg(QImage* img) {
+    return img && !img->isNull();
+}
+
 void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel, const QVector3D &inverseLight,
                               const QVector3D &viewFront) {
     int y = pixel / width;
     int x = pixel % width;
     QImage* diffuseImage = model->getDiffuse();
+    QImage* normalImage = model->getNormal();
+    QImage* specularImage = model->getSpecular();
+    QImage* emissionImage = model->getEmission();
 
-    QVector3D barycentric = toBarycentric(face, (float)x, (float)y);
+    QVector3D barycentric = toBarycentric2D(face, (float)x, (float)y);
+
+//    if (barycentric.x() < 0 || barycentric.y() < 0 || barycentric.z() < 0) {
+//        return;
+//    }
+
     const QVector3D& tA = *face[0].texture;
     const QVector3D& tB = *face[1].texture;
     const QVector3D& tC = *face[2].texture;
-    QVector3D t = (tA * barycentric.x() + tB * barycentric.y() + tC * barycentric.z()).normalized();
-//    printf("%f %f %f %d\n", t.x(), t.y(), t.z(), isnanf(t.x()));
 
-    Vec3i diffuseColor = texel(diffuseImage, t, DIFFUSE_DEF_COLOR);
-//    Vec3i diffuseColor = DIFFUSE_DEF_COLOR;
+    QVector3D t = (tA * barycentric.x() + tB * barycentric.y() + tC * barycentric.z());
+    Vec3i diffuseColor = isImg(diffuseImage) ? texel(diffuseImage, t, BACKGROUND_COLOR) : DIFFUSE_DEF_COLOR;
+    Vec3i emissionColor = isImg(emissionImage) ? texel(emissionImage, t, {0, 0, 0}) : Vec3i{0, 0, 0};
 
     Vec3i lightColor = LIGHT_COLOR;
 
     Vec3i ambient = diffuseColor * AMBIENT_WEIGHT;
 
-    const QVector3D& nA = *face[0].normal;
-    const QVector3D& nB = *face[1].normal;
-    const QVector3D& nC = *face[2].normal;
-    QVector3D n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
+    QVector3D n;
+    if (isImg(normalImage)) {
+        Vec3i v = texel(normalImage, t, {0, 0, 0});
+        n = QVector3D{texelToNormal(v.x), texelToNormal(v.y), texelToNormal(v.z)}.normalized();
+    } else {
+        const QVector3D& nA = *face[0].normal;
+        const QVector3D& nB = *face[1].normal;
+        const QVector3D& nC = *face[2].normal;
+        n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
+    }
+
     Vec3i diffuse = diffuseColor * DIFFUSE_WEIGHT * std::max(QVector3D::dotProduct(n, inverseLight), 0.f);
 
     QVector3D lightReflect = reflect(inverseLight, n).normalized();
-    Vec3i specular = lightColor * SPECULAR_WEIGHT *
+    float specularWeight = SPECULAR_WEIGHT;
+    if (isImg(specularImage)) {
+        specularWeight = (float)texel(specularImage, t, {0, 0, 0}).x / 255;
+    }
+
+    Vec3i specular = lightColor * specularWeight *
                      powf(std::max(QVector3D::dotProduct(lightReflect, viewFront), 0.f) , SPECULAR_POWER);
 
-    screen[pixel] = (ambient + diffuse + specular).toRgb();
+    screen[pixel] = (ambient + diffuse + emissionColor + specular).toRgb();
 }
-
 
 

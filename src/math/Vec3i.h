@@ -9,6 +9,7 @@
 struct Vec3i {
     int x; int y; int z;
 
+    Vec3i() {}
     Vec3i(int x, int y, int z);
     Vec3i(const QVector3D& v) {
         x = v.x() + .5;

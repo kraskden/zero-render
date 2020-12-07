@@ -17,7 +17,8 @@ Model3D::Model3D(QString modelDir) {
     QString modelPath = fullPath(modelDir, settings.value("model", "model.obj").toString());
     QString diffusePath = fullPath(modelDir, settings.value("diffuse", "diffuse.png").toString());
     QString normalPath = fullPath(modelDir, settings.value("normal", "normal.png").toString());
-    QString mirroredPath = fullPath(modelDir,settings.value("mirrored", "mirrored.png").toString());
+    QString specularPath = fullPath(modelDir,settings.value("specular", "specular.png").toString());
+    QString emissionPath = fullPath(modelDir, settings.value("emission", "emission.png").toString());
     float scale = settings.value("scale", 1.0).toFloat();
 
     if (!QFile::exists(modelPath)) {
@@ -27,8 +28,8 @@ Model3D::Model3D(QString modelDir) {
 
     diffuse = new QImage(diffusePath);
     normal = new QImage(normalPath);
-    mirrored = new QImage(mirroredPath);
-
+    specular = new QImage(specularPath);
+    emission = new QImage(emissionPath);
 
     this->worldMatrix = matrix::scale({scale, scale, scale});
     this->objModel = parseObjFile(modelPath);
