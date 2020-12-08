@@ -92,7 +92,6 @@ void GlPainter::fillTBuffer(Face *face, Vec3i t0, Vec3i t1, Vec3i t2) {
             if (zBuffer[lockIdx] > P.z) {
                 zBuffer[lockIdx] = P.z;
                 tBuffer[lockIdx] = face;
-                putPoint(lockIdx);
             }
             unlock(lockIdx);
         }
@@ -136,6 +135,11 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel,
                          bc_screen.y() / face[1].screen.w(),
                          bc_screen.z() / face[2].screen.w()};
     bc_clip = bc_clip / (bc_clip.x() + bc_clip.y() + bc_clip.z());
+
+//    if (bc_clip.x() < 0 || bc_clip.y() < 0 || bc_clip.z() < 0 ||
+//        bc_clip.x() > 1 || bc_clip.y() > 1 || bc_clip.z() > 1) {
+//        return;
+//    }
 
     QVector3D t = (tA * bc_clip.x() + tB * bc_clip.y() + tC * bc_clip.z());
     Vec3i diffuseColor = isImg(diffuseImage) ? texel(diffuseImage, t, BACKGROUND_COLOR) : DIFFUSE_DEF_COLOR;

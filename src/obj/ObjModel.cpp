@@ -1,7 +1,9 @@
 #include "ObjModel.h"
 
+#include <QDebug>
+
 ObjModel::ObjModel(QList<QVector3D> *points, QList<QVector3D> *normals, QList<QVector3D> *textures,
-                   QList<IdxFace> *idxFaces) : points(points), normals(normals) {
+                   QList<IdxFace> *idxFaces) : points(points), normals(normals), textures(textures) {
     faces = new QList<Face>{};
     int pointsLen = points->size();
     int normalsLen = normals->size();
