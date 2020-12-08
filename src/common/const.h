@@ -7,10 +7,10 @@
 #define MODEL_SETTING_FILE "model.ini"
 
 /* Light constants */
-#define SPECULAR_POWER 4
+#define SPECULAR_POWER 16
 #define AMBIENT_WEIGHT 0.1f
 #define DIFFUSE_WEIGHT 0.9f
-#define SPECULAR_WEIGHT 0.1f
+#define SPECULAR_WEIGHT 0.4f
 
 /* Color constants */
 #define BACKGROUND_COLOR QColorConstants::Cyan

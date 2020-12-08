@@ -114,6 +114,8 @@ bool isImg(QImage* img) {
     return img && !img->isNull();
 }
 
+//Vec3i getPerspectiveDiffuse(const QVector3D& bar, )
+
 void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel, const QVector3D &inverseLight,
                               const QVector3D &viewFront) {
     int y = pixel / width;
@@ -123,17 +125,19 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel,
     QImage* specularImage = model->getSpecular();
     QImage* emissionImage = model->getEmission();
 
-    QVector3D barycentric = toBarycentric2D(face, (float)x, (float)y);
-
-//    if (barycentric.x() < 0 || barycentric.y() < 0 || barycentric.z() < 0) {
-//        return;
-//    }
+    QVector3D bc_screen = toBarycentric2D(face, (float)x, (float)y);
 
     const QVector3D& tA = *face[0].texture;
     const QVector3D& tB = *face[1].texture;
     const QVector3D& tC = *face[2].texture;
 
-    QVector3D t = (tA * barycentric.x() + tB * barycentric.y() + tC * barycentric.z());
+    //QVector3D bc_clip = bc_screen;
+    QVector3D bc_clip = {bc_screen.x() / face[0].screen.w(),
+                         bc_screen.y() / face[1].screen.w(),
+                         bc_screen.z() / face[2].screen.w()};
+    bc_clip = bc_clip / (bc_clip.x() + bc_clip.y() + bc_clip.z());
+
+    QVector3D t = (tA * bc_clip.x() + tB * bc_clip.y() + tC * bc_clip.z());
     Vec3i diffuseColor = isImg(diffuseImage) ? texel(diffuseImage, t, BACKGROUND_COLOR) : DIFFUSE_DEF_COLOR;
     Vec3i emissionColor = isImg(emissionImage) ? texel(emissionImage, t, {0, 0, 0}) : Vec3i{0, 0, 0};
 
@@ -149,7 +153,7 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel,
         const QVector3D& nA = *face[0].normal;
         const QVector3D& nB = *face[1].normal;
         const QVector3D& nC = *face[2].normal;
-        n = (nA * barycentric.x() + nB * barycentric.y() + nC * barycentric.z()).normalized();
+        n = (nA * bc_clip.x() + nB * bc_clip.y() + nC * bc_clip.z()).normalized();
     }
 
     Vec3i diffuse = diffuseColor * DIFFUSE_WEIGHT * std::max(QVector3D::dotProduct(n, inverseLight), 0.f);

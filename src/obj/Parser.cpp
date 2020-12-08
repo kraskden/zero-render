@@ -39,7 +39,7 @@ QVector3D getPoint(const QStringList& parseLine) {
     float x = parseLine[1].toFloat();
     float y = lastIdx < 2 ? 0 : parseLine[2].toFloat();
     float z = lastIdx < 3 ? 0 : parseLine[3].toFloat();
-    return {x, y, z};
+    return QVector3D{x, y, z};
 }
 
 void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) {
@@ -47,6 +47,9 @@ void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) 
     for (int i = 1; i < parseLine.length(); ++i) {
         QString pointEntry = parseLine[i];
         QStringList idxes = pointEntry.split('/');
+        if (idxes.length() != 3) {
+            continue;
+        }
         idxVertexes.append({idxes[0].toInt(), idxes[2].toInt(), idxes[1].toInt()});
     }
     for (int i = 1; i < idxVertexes.length() - 1; ++i) {

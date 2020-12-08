@@ -141,6 +141,7 @@ void MainWindow::onUpdateTimer() {
 }
 
 void MainWindow::loadModel() {
-    QString modelDir =  QFileDialog::getExistingDirectory(nullptr, "Open model directory");
+    QString modelDir =  QFileDialog::getExistingDirectory(nullptr, "Open model directory",
+                                                          "../resources");
     scene->setModel(new Model3D(modelDir));
 }

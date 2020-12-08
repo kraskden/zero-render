@@ -51,8 +51,9 @@ void Scene::setHeight(int height) {
 void norm_vec(QVector4D& vec) {
     vec.setX(vec.x() / vec.w());
     vec.setY(vec.y() / vec.w());
+    float oldZ = vec.z();
     vec.setZ(vec.z() / vec.w());
-    vec.setW(1.0);
+    vec.setW(oldZ); // Old Z coordinate for perspective correction
 }
 
 bool is_vec_drop(const QVector4D& vec) {

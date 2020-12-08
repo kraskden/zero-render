@@ -44,11 +44,15 @@ QVector3D reflect(const QVector3D &v, const QVector3D &n) {
 }
 
 Vec3i texel(const QImage *image, const QVector3D &pos, const Vec3i &def) {
+    float w = image->width();
+    float h = image->height();
+
     if (isnanf(pos.x()) || isnanf(pos.y())) {
         return def;
     }
-    float x = pos.x() * image->width();
-    float y = image->height() - pos.y() * image->height();
+
+    float x = std::min(w - 1, pos.x() * w);
+    float y = std::min(h - 1, h - pos.y() * h);
     if (x < 0 || y < 0 || y > image->height() || x > image->width()) {
         return def;
     }
