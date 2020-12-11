@@ -47,8 +47,7 @@ typedef _Face<IdxVertex> IdxFace;
 
 struct BuffPoint {
     Face* face;
-    float x;
-    float y;
+    QVector3D bar;
 };
 
 

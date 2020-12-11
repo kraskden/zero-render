@@ -11,7 +11,7 @@
 #include <QtConcurrent/QtConcurrent>
 
 Scene::Scene(int width, int height, QObject *parent) :
-    QObject(parent), painter(nullptr, nullptr, nullptr, nullptr, 0), width(width), height(height) {
+    QObject(parent), painter(nullptr, nullptr, nullptr, nullptr, 0, 0), width(width), height(height) {
 
     createBuffers();
 }
@@ -30,7 +30,7 @@ void Scene::repaint(QPainter *qPainter) {
     QImage world = QImage(width, height, QImage::Format_RGB32);
     world.fill(BACKGROUND_COLOR);
 
-    this->painter = GlPainter(&world, atomics, zBuffer, tBuffer, width);
+    this->painter = GlPainter(&world, atomics, zBuffer, tBuffer, width, height);
     paintModel(model);
 
     qPainter->drawImage(0, 0, world);
@@ -92,8 +92,7 @@ void Scene::paintModel(Model3D *model) {
     BuffPoint* end = tBuffer + width * height;
     QFuture<void> paintLoop = QtConcurrent::map(start, end, [&](BuffPoint& buffPoint) -> void {
         if (!buffPoint.face) {return;}
-        painter.putLightPoint(model, *buffPoint.face, &buffPoint - start,
-                              buffPoint.x, buffPoint.y, inverseLight, viewFront);
+        painter.putLightPoint(model, *buffPoint.face, &buffPoint - start, buffPoint.bar, inverseLight, viewFront);
     });
     paintLoop.waitForFinished();
 }
