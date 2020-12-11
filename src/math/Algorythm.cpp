@@ -43,19 +43,24 @@ QVector3D reflect(const QVector3D &v, const QVector3D &n) {
     return v - QVector3D::dotProduct(v, n) * 2 * n;
 }
 
-Vec3i texel(const QImage &image, const QVector3D &pos, const Vec3i &def) {
+Vec3i texel(const QImage &image, const QVector3D &pos) {
     float w = image.width();
     float h = image.height();
 
     if (isnanf(pos.x()) || isnanf(pos.y())) {
-        return def;
+        //qDebug() << "Pos is nan";
+        //throw std::runtime_error("Pos is NaN");
+        return QColorConstants::Red;
+   }
+
+    float tX = pos.x() * w;
+    float tY = h - pos.y() * h;
+    if (tX < 0 || tY < 0 || tX > w || tY > h) {
+        return QColorConstants::Cyan;
     }
 
-    float x = std::min(w - 1, pos.x() * w);
-    float y = std::min(h - 1, h - pos.y() * h);
-    if (x < 0 || y < 0 || y > image.height() || x > image.width()) {
-        return def;
-    }
+    float x = std::max(std::min(w - 1, pos.x() * w), 0.f);
+    float y = std::max(std::min(h - 1, h - pos.y() * h), 0.f);
     // TODO: use const data
     return QColor::fromRgb(image.pixel((int)x, (int)y));
 }
@@ -89,5 +94,9 @@ QVector3D toBarycentric2D(const Face &face, float x, float y) {
     float beta = reverseDet * ((c.y - a.y) * (x - c.x) +
                                (a.x - c.x) * (y - c.y));
     float gamma = 1 - alpha - beta;
+
+    if (isnanf(alpha) || isnanf(beta) || isnanf(gamma)) {
+        qDebug() << "! " << alpha << beta << gamma << reverseDet;
+    }
     return QVector3D{alpha, beta, gamma};
 }

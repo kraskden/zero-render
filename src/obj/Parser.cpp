@@ -1,14 +1,13 @@
 #include <QtCore/QFile>
 #include <QtCore/QTextStream>
-#include <QDebug>
 #include "Parser.h"
 
 QVector3D getPoint(const QStringList& parseLine);
 void processFaceIndexes(const QStringList &parseLine, QList<IdxFace> *idxFaces, Mtl *faceMtl);
 QString getMtlName(const QStringList& parseLine);
-void loadMtlLibrary(const QString& path, MtlContext &mtlContext);
+void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mtlContext);
 
-ObjModel *parseObjFile(const QString &path, MtlContext &mtlContext) {
+ObjModel *parseObjFile(const QString &modelDir, const QString &path, MtlContext &mtlContext) {
     Mtl* currentMtl = mtlContext.getDefMtl();
     auto *points = new QList<QVector3D>{};
     auto *normals = new QList<QVector3D>{};
@@ -19,8 +18,8 @@ ObjModel *parseObjFile(const QString &path, MtlContext &mtlContext) {
         QTextStream in(&file);
         while (!in.atEnd()) {
             QStringList list = in.readLine().split(' ');
-            if (list[0] == "loadmtl") {
-               loadMtlLibrary(getMtlName(list), mtlContext);
+            if (list[0] == "mtllib") {
+                loadMtlLibrary(modelDir, modelDir + "/" + getMtlName(list), mtlContext);
             } else if (list[0] == "usemtl") {
                 currentMtl = mtlContext.getMtl(getMtlName(list));
             }
@@ -42,26 +41,45 @@ ObjModel *parseObjFile(const QString &path, MtlContext &mtlContext) {
     return new ObjModel(points, normals, textures, idxFaces);
 }
 
-void loadMtlLibrary(const QString& path, MtlContext &mtlContext) {
-    // TODO: implement
+void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mtlContext) {
     QMap<QString, Mtl*> mtls;
 
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "Failed load mtl library " << path;
+        return;
     }
     QTextStream in(&file);
+
+    Mtl* current = nullptr;
     while (!in.atEnd()) {
         QStringList list = in.readLine().split(' ');
-
+        if (list[0] == "newmtl") {
+            if (current) {
+                mtls.insert(current->name, current);
+            }
+            current = new Mtl{};
+            current->name = list[1];
+        } else if (list[0] == "map_Kd" && current) {
+            current->diffuseImage = QImage{modelDir + "/" + list[1]};
+        } else if (list[0] == "map_Ks" && current) {
+            current->specularImage = QImage{modelDir + "/" + list[1]};
+        } else if (list[0] == "map_Ke" && current) {
+            current->emissionImage = QImage{modelDir + "/" + list[1]};
+        }
+        // TODO:  Normal - emission
+    }
+    if (current) {
+        mtls.insert(current->name, current);
     }
 
     mtlContext.addMtls(mtls);
+    qDebug() << "Use mtl library: " << path;
 }
 
+
 QString getMtlName(const QStringList& parseLine) {
-    // TODO: implement
-    return "";
+    return parseLine.mid(1).join(' ');
 }
 
 QVector3D getPoint(const QStringList& parseLine) {

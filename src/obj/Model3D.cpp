@@ -24,7 +24,7 @@ Model3D::Model3D(const QString& modelDir) {
 
     loadDefMtl(modelDir, settings);
     this->worldMatrix = matrix::scale({scale, scale, scale});
-    this->objModel = parseObjFile(modelPath, *this);
+    this->objModel = parseObjFile(modelDir, modelPath, *this);
 }
 
 void Model3D::loadDefMtl(const QString& modelDir, const QSettings &settings) {

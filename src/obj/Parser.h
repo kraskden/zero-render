@@ -4,6 +4,6 @@
 #include "ObjModel.h"
 #include "Model3D.h"
 
-ObjModel *parseObjFile(const QString &path, MtlContext &mtlContext);
+ObjModel *parseObjFile(const QString &modelDir, const QString &path, MtlContext &mtlContext);
 
 #endif //GLPAINTER_PARSER_H
