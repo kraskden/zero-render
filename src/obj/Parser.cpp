@@ -4,9 +4,12 @@
 #include "Parser.h"
 
 QVector3D getPoint(const QStringList& parseLine);
-void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces);
+void processFaceIndexes(const QStringList &parseLine, QList<IdxFace> *idxFaces, Mtl *faceMtl);
+QString getMtlName(const QStringList& parseLine);
+void loadMtlLibrary(const QString& path, MtlContext &mtlContext);
 
-ObjModel *parseObjFile(const QString& path) {
+ObjModel *parseObjFile(const QString &path, MtlContext &mtlContext) {
+    Mtl* currentMtl = mtlContext.getDefMtl();
     auto *points = new QList<QVector3D>{};
     auto *normals = new QList<QVector3D>{};
     auto *textures = new QList<QVector3D>{};
@@ -16,7 +19,12 @@ ObjModel *parseObjFile(const QString& path) {
         QTextStream in(&file);
         while (!in.atEnd()) {
             QStringList list = in.readLine().split(' ');
-            if (list[0] == 'v') {
+            if (list[0] == "loadmtl") {
+               loadMtlLibrary(getMtlName(list), mtlContext);
+            } else if (list[0] == "usemtl") {
+                currentMtl = mtlContext.getMtl(getMtlName(list));
+            }
+            else if (list[0] == 'v') {
                 points->append(getPoint(list));
             } else if (list[0] == "vn") {
                 normals->append(getPoint(list).normalized());
@@ -24,7 +32,7 @@ ObjModel *parseObjFile(const QString& path) {
                 textures->append(getPoint(list));
             }
             else if (list[0] == 'f') {
-                processFaceIndexes(list, idxFaces);
+                processFaceIndexes(list, idxFaces, currentMtl);
             }
         }
         file.close();
@@ -32,6 +40,28 @@ ObjModel *parseObjFile(const QString& path) {
         qDebug() << "Cannot open model file";
     }
     return new ObjModel(points, normals, textures, idxFaces);
+}
+
+void loadMtlLibrary(const QString& path, MtlContext &mtlContext) {
+    // TODO: implement
+    QMap<QString, Mtl*> mtls;
+
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed load mtl library " << path;
+    }
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QStringList list = in.readLine().split(' ');
+
+    }
+
+    mtlContext.addMtls(mtls);
+}
+
+QString getMtlName(const QStringList& parseLine) {
+    // TODO: implement
+    return "";
 }
 
 QVector3D getPoint(const QStringList& parseLine) {
@@ -42,7 +72,7 @@ QVector3D getPoint(const QStringList& parseLine) {
     return QVector3D{x, y, z};
 }
 
-void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) {
+void processFaceIndexes(const QStringList &parseLine, QList<IdxFace> *idxFaces, Mtl *faceMtl) {
     QList<IdxVertex> idxVertexes;
     for (int i = 1; i < parseLine.length(); ++i) {
         QString pointEntry = parseLine[i];
@@ -53,7 +83,8 @@ void processFaceIndexes(const QStringList& parseLine, QList<IdxFace>* idxFaces) 
         idxVertexes.append({idxes[0].toInt(), idxes[2].toInt(), idxes[1].toInt()});
     }
     for (int i = 1; i < idxVertexes.length() - 1; ++i) {
-        QList<IdxVertex> idxFace = {idxVertexes[0], idxVertexes[i], idxVertexes[i + 1]};
+        IdxFace idxFace{faceMtl};
+        idxFace.append({idxVertexes[0], idxVertexes[i], idxVertexes[i + 1]});
         idxFaces->append(idxFace);
     }
 }

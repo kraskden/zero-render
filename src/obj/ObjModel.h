@@ -7,24 +7,7 @@
 #include <QtGui/QVector2D>
 #include "../math/Vec3i.h"
 
-struct Vertex {
-    const QVector3D* point;
-    const QVector3D* normal;
-    const QVector3D* texture;
-    QVector4D screen;
-    Vec3i screen2D;
-    QVector2D transTexture;
-};
-
-typedef QList<Vertex> Face;
-
-struct IdxVertex {
-    int pointIdx;
-    int normalIdx;
-    int textureIdx;
-};
-
-typedef QList<IdxVertex> IdxFace;
+#include "../common/types.h"
 
 class ObjModel {
 

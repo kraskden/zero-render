@@ -109,9 +109,6 @@ float texelToNormal(QRgb texel) {
     return ((float)texel / 255) * 2 - 1;
 }
 
-bool isImg(QImage* img) {
-    return img && !img->isNull();
-}
 
 //Vec3i getPerspectiveDiffuse(const QVector3D& bar, )
 
@@ -119,10 +116,12 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel,
                               const QVector3D &viewFront) {
     int y = pixel / width;
     int x = pixel % width;
-    QImage* diffuseImage = model->getDiffuse();
-    QImage* normalImage = model->getNormal();
-    QImage* specularImage = model->getSpecular();
-    QImage* emissionImage = model->getEmission();
+
+    Mtl* mtl = face.getMtl();
+    QImage& diffuseImage = mtl->diffuseImage;
+    QImage& normalImage = mtl->normalImage;
+    QImage& specularImage = mtl->specularImage;
+    QImage& emissionImage = mtl->emissionImage;
 
     QVector3D bc_screen = toBarycentric2D(face, (float)x, (float)y);
 
@@ -130,27 +129,21 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel,
     const QVector3D& tB = *face[1].texture;
     const QVector3D& tC = *face[2].texture;
 
-    //QVector3D bc_clip = bc_screen;
     QVector3D bc_clip = {bc_screen.x() / face[0].screen.w(),
                          bc_screen.y() / face[1].screen.w(),
                          bc_screen.z() / face[2].screen.w()};
     bc_clip = bc_clip / (bc_clip.x() + bc_clip.y() + bc_clip.z());
 
-//    if (bc_clip.x() < 0 || bc_clip.y() < 0 || bc_clip.z() < 0 ||
-//        bc_clip.x() > 1 || bc_clip.y() > 1 || bc_clip.z() > 1) {
-//        return;
-//    }
-
     QVector3D t = (tA * bc_clip.x() + tB * bc_clip.y() + tC * bc_clip.z());
-    Vec3i diffuseColor = isImg(diffuseImage) ? texel(diffuseImage, t, BACKGROUND_COLOR) : DIFFUSE_DEF_COLOR;
-    Vec3i emissionColor = isImg(emissionImage) ? texel(emissionImage, t, {0, 0, 0}) : Vec3i{0, 0, 0};
+    Vec3i diffuseColor = !diffuseImage.isNull() ? texel(diffuseImage, t, BACKGROUND_COLOR) : DIFFUSE_DEF_COLOR;
+    Vec3i emissionColor = !emissionImage.isNull() ? texel(emissionImage, t, {0, 0, 0}) : Vec3i{0, 0, 0};
 
     Vec3i lightColor = LIGHT_COLOR;
 
     Vec3i ambient = diffuseColor * AMBIENT_WEIGHT;
 
     QVector3D n;
-    if (isImg(normalImage)) {
+    if (!normalImage.isNull()) {
         Vec3i v = texel(normalImage, t, {0, 0, 0});
         n = QVector3D{texelToNormal(v.x), texelToNormal(v.y), texelToNormal(v.z)}.normalized();
     } else {
@@ -164,7 +157,7 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int pixel,
 
     QVector3D lightReflect = reflect(inverseLight, n).normalized();
     float specularWeight = SPECULAR_WEIGHT;
-    if (isImg(specularImage)) {
+    if (!specularImage.isNull()) {
         specularWeight = (float)texel(specularImage, t, {0, 0, 0}).x / 255;
     }
 

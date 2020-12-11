@@ -4,52 +4,42 @@
 
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QImage>
+#include <QtCore/QSettings>
 #include "ObjModel.h"
+#include "MtlContext.h"
 
-class Model3D {
+class Model3D : public MtlContext {
     ObjModel* objModel = nullptr;
     QMatrix4x4 worldMatrix;
 
-    QImage* diffuse = nullptr;
-    QImage* normal = nullptr;
-    QImage* specular = nullptr;
-    QImage* emission = nullptr;
+    QMap<QString, Mtl*> mtls;
+    Mtl* defMtl;
 
 public:
-    explicit Model3D(QString modelDir);
+    explicit Model3D(const QString& modelDir);
 
     Model3D(ObjModel* objModel, QMatrix4x4 worldMatrix) {
         this->objModel = objModel;
         this->worldMatrix = worldMatrix;
     }
 
-    QImage *getDiffuse() const {
-        return diffuse;
-    }
 
-    QImage *getNormal() const {
-        return normal;
-    }
+    QList<Face>& getFaces() const {return objModel->getFaces(); }
+    const QMatrix4x4& getWorldMatrix() const {return worldMatrix;}
+    const ObjModel* obj() const {return objModel;}
 
-    QImage *getSpecular() const {
-        return specular;
-    }
-
-    QImage* getEmission() const {
-        return emission;
-    }
-
-    QList<Face>& getFaces() {return objModel->getFaces(); }
-    const QMatrix4x4& getWorldMatrix() {return worldMatrix;}
-    const ObjModel* obj() {return objModel;}
+    Mtl* getDefMtl() override {return defMtl; }
+    void addMtls(const QMap<QString, Mtl*>& data) override {mtls.insert(data); }
+    Mtl* getMtl(const QString& name) override {return mtls.value(name, defMtl); }
 
     ~Model3D() {
         delete objModel;
-        delete diffuse;
-        delete normal;
-        delete specular;
-        delete emission;
+        delete defMtl;
+        qDeleteAll(mtls);
     }
+
+private:
+    void loadDefMtl(const QString& modelDir, const QSettings &settings);
 };
 
 

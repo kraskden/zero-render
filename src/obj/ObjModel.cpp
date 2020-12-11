@@ -9,7 +9,7 @@ ObjModel::ObjModel(QList<QVector3D> *points, QList<QVector3D> *normals, QList<QV
     int normalsLen = normals->size();
     int texturesLen = textures->size();
     for (IdxFace& idxFace : *idxFaces) {
-        QList<Vertex> shape;
+        Face shape{idxFace.getMtl()};
         for (IdxVertex& idxVertex : idxFace) {
             idxVertex.pointIdx < 0 ? idxVertex.pointIdx += pointsLen : idxVertex.pointIdx -= 1;
             idxVertex.normalIdx < 0 ? idxVertex.normalIdx += normalsLen : idxVertex.normalIdx -= 1;

@@ -31,7 +31,6 @@ void Scene::repaint(QPainter *qPainter) {
     world.fill(BACKGROUND_COLOR);
 
     this->painter = GlPainter(&world, atomics, zBuffer, tBuffer, width);
-    //testCase();
     paintModel(model);
 
     qPainter->drawImage(0, 0, world);
@@ -77,7 +76,6 @@ void Scene::paintModel(Model3D *model) {
             QVector4D proj = projectionView * QVector4D(*face[i].point, 1);
             if (is_vec_drop(proj)) return;
             face[i].screen = viewport * proj;
-            face[i].transTexture = (projectionView * face[i].texture->toVector4D()).toVector2D();
             norm_vec(face[i].screen);
             face[i].screen2D = face[i].screen.toVector3D();
         }
@@ -98,8 +96,6 @@ void Scene::paintModel(Model3D *model) {
         painter.putLightPoint(model, *face, idx, inverseLight, viewFront);
     });
     paintLoop.waitForFinished();
-    //model->getDiffuse()->save("out.png");
-    //exit(0);
 }
 
 void Scene::setCamera(Camera *camera) {

@@ -43,9 +43,9 @@ QVector3D reflect(const QVector3D &v, const QVector3D &n) {
     return v - QVector3D::dotProduct(v, n) * 2 * n;
 }
 
-Vec3i texel(const QImage *image, const QVector3D &pos, const Vec3i &def) {
-    float w = image->width();
-    float h = image->height();
+Vec3i texel(const QImage &image, const QVector3D &pos, const Vec3i &def) {
+    float w = image.width();
+    float h = image.height();
 
     if (isnanf(pos.x()) || isnanf(pos.y())) {
         return def;
@@ -53,10 +53,11 @@ Vec3i texel(const QImage *image, const QVector3D &pos, const Vec3i &def) {
 
     float x = std::min(w - 1, pos.x() * w);
     float y = std::min(h - 1, h - pos.y() * h);
-    if (x < 0 || y < 0 || y > image->height() || x > image->width()) {
+    if (x < 0 || y < 0 || y > image.height() || x > image.width()) {
         return def;
     }
-    return QColor::fromRgb(image->pixel((int)x, (int)y));
+    // TODO: use const data
+    return QColor::fromRgb(image.pixel((int)x, (int)y));
 }
 
 QVector3D toBarycentric3(const Face &face, float x, float y) {
