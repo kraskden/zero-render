@@ -12,6 +12,10 @@ struct Vec3i {
     Vec3i() {}
     Vec3i(int x, int y, int z);
     Vec3i(const QVector3D& v) {
+//        x = v.x();
+//        y = v.y();
+//        z = v.z();
+
         x = v.x() + .5;
         y = v.y() + .5;
         z = v.z() + .5;
@@ -35,7 +39,7 @@ struct Vec3i {
     friend QVector3D operator*(const Vec3i& v, float f);
     friend QVector3D operator/(const Vec3i& v, float f);
 
-    QVector3D toVector3D() {
+    QVector3D toVector3D() const {
         return {(float)x, (float)y, (float)z};
     }
 

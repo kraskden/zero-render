@@ -93,6 +93,9 @@ void GlPainter::fillTBuffer(Face *face, Vec3i t0, Vec3i t1, Vec3i t2) {
             if (zBuffer[lockIdx] > Pi.z) {
                 zBuffer[lockIdx] = Pi.z;
                 tBuffer[lockIdx] = {face, P.x(), P.y()};
+               // QVector3D bar = toBarycentric2D_int(t0, t1, t2, P.x(), P.y());
+//                tBuffer[lockIdx] = {face, (float)Pi.x, (float)Pi.y};
+
             }
             unlock(lockIdx);
         }
@@ -126,10 +129,10 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int px, fl
 
     QVector3D bc_screen = toBarycentric2D(face, x, y);
 
-    if (bc_screen.x() < 0 || bc_screen.y() < 0 || bc_screen.z() < 0 ||
-        bc_screen.x() > 1 || bc_screen.y() > 1 || bc_screen.z() > 1)  {
-        return;
-    }
+//    if (bc_screen.x() < 0 || bc_screen.y() < 0 || bc_screen.z() < 0 ||
+//        bc_screen.x() > 1 || bc_screen.y() > 1 || bc_screen.z() > 1)  {
+//        return;
+//    }
 
     const QVector3D& tA = *face[0].texture;
     const QVector3D& tB = *face[1].texture;
@@ -141,13 +144,13 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int px, fl
                          bc_screen.z() / face[2].screen.w()};
     bc_clip = bc_clip / (bc_clip.x() + bc_clip.y() + bc_clip.z());
 
-    if (bc_clip.x() < 0 || bc_clip.y() < 0 || bc_clip.z() < 0 ||
-        bc_clip.x() > 1 || bc_clip.y() > 1 || bc_clip.z() > 1) {
-        return;
-        //exit(0);
-    }
+//    if (bc_clip.x() < 0 || bc_clip.y() < 0 || bc_clip.z() < 0 ||
+//        bc_clip.x() > 1 || bc_clip.y() > 1 || bc_clip.z() > 1) {
+//        return;
+//        //exit(0);
+//    }
 
-    // TODO: Fix successfull, remove
+    // sdkwa;sTODO: Fix successfull, remove
     if (isnanf(bc_clip.x()) || isnanf(bc_clip.y()) || isnanf(bc_clip.z())) {
         //qDebug() << bc_screen;
         //return;
@@ -156,11 +159,11 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int px, fl
 
     QVector3D t = (tA * bc_clip.x() + tB * bc_clip.y() + tC * bc_clip.z());
 
-    if (t.x() < 0 || t.y() < 0 || t.z() < 0 || t.x() > 1 || t.y() > 1 || t.z() > 1) {
-        qDebug() << "---";
-        qDebug() << t << bc_clip << tA << tB << tC;
-        return;
-    }
+//    if (t.x() < 0 || t.y() < 0 || t.z() < 0 || t.x() > 1 || t.y() > 1 || t.z() > 1) {
+//        qDebug() << "---";
+//        qDebug() << t << bc_clip << tA << tB << tC;
+//        return;
+//    }
 
     Vec3i diffuseColor = !diffuseImage.isNull() ? texel(diffuseImage, t) : DIFFUSE_DEF_COLOR;
 
@@ -194,5 +197,6 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int px, fl
 
     screen[px] = (ambient + diffuse + emissionColor + specular).toRgb();
 }
+
 
 

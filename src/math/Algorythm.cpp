@@ -53,11 +53,11 @@ Vec3i texel(const QImage &image, const QVector3D &pos) {
         return QColorConstants::Red;
    }
 
-    float tX = pos.x() * w;
-    float tY = h - pos.y() * h;
-    if (tX < 0 || tY < 0 || tX > w - 1 || tY > h - 1) {
-        return QColorConstants::Cyan;
-    }
+//    float tX = pos.x() * w;
+//    float tY = h - pos.y() * h;
+//    if (tX < 0 || tY < 0 || tX > w - 1 || tY > h - 1) {
+//        return QColorConstants::Cyan;
+//    }
 
     float x = std::max(std::min(w - 1, pos.x() * w), 0.f);
     float y = std::max(std::min(h - 1, h - pos.y() * h), 0.f);
@@ -81,6 +81,10 @@ QVector3D toBarycentric3(const Face &face, float x, float y) {
     return QVector3D{alpha, beta, gamma};
 }
 
+bool isNorm(float x) {
+    return x > 0.f && x < 1.f;
+}
+
 QVector3D toBarycentric2D(const Face &face, float x, float y) {
     // TODO: vec4d is bullshit
     const QVector4D& a = face[0].screen;
@@ -99,5 +103,35 @@ QVector3D toBarycentric2D(const Face &face, float x, float y) {
     if (isnanf(alpha) || isnanf(beta) || isnanf(gamma)) {
         // qDebug() << "! " << alpha << beta << gamma << reverseDet;
     }
+
+    if (!isNorm(alpha) || !isNorm(beta) || !isNorm(gamma)) {
+//        qDebug() << QVector3D{alpha, beta, gamma} << face[0].screen << face[1].screen << face[2].screen << "::" <<
+//            x << y;
+    }
+
+    return QVector3D{alpha, beta, gamma};
+}
+
+QVector3D toBarycentric2D_int(const Vec3i &a, const Vec3i &b, const Vec3i &c, float x, float y) {
+
+    float reverseDet = 1.f / ((b.y - c.y) * (a.x - c.x)
+                              + (c.x - b.x) * (a.y - c.y));
+
+    float alpha = reverseDet * ((b.y - c.y) * (x - c.x) +
+                                (c.x - b.x) * (y - c.y));
+    float beta = reverseDet * ((c.y - a.y) * (x - c.x) +
+                               (a.x - c.x) * (y - c.y));
+    float gamma = 1 - alpha - beta;
+
+    if (isnanf(alpha) || isnanf(beta) || isnanf(gamma)) {
+         qDebug() << "! " << alpha << beta << gamma << reverseDet;
+    }
+
+    if (!isNorm(alpha) || !isNorm(beta) || !isNorm(gamma)) {
+
+//        qDebug() << QVector3D{alpha, beta, gamma} << a.toVector3D() << b.toVector3D() << c.toVector3D() << "::" <<
+//                 x << y;
+    }
+
     return QVector3D{alpha, beta, gamma};
 }

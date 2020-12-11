@@ -23,6 +23,7 @@ public:
     void asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity);
 
     void fillTBuffer(Face* face, Vec3i t0, Vec3i t1, Vec3i t2);
+    void fillTBuffer2(Face* face, Vec3i t0, Vec3i t1, Vec3i t2);
     void putPoint(int idx);
 
     void putLightPoint(const Model3D *model, const Face &face, int px, float x, float y,
