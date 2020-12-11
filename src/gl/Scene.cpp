@@ -26,7 +26,7 @@ void Scene::repaint(QPainter *qPainter) {
     }
 
     std::fill(zBuffer, zBuffer + width * height, std::numeric_limits<int>::max());
-    std::fill(tBuffer, tBuffer + width * height, nullptr);
+    std::fill(tBuffer, tBuffer + width * height, BuffPoint{});
     QImage world = QImage(width, height, QImage::Format_RGB32);
     world.fill(BACKGROUND_COLOR);
 
@@ -88,12 +88,12 @@ void Scene::paintModel(Model3D *model) {
         }
     });
     computeLoop.waitForFinished();
-    Face** start = tBuffer;
-    Face** end = tBuffer + width * height;
-    QFuture<void> paintLoop = QtConcurrent::map(start, end, [&](Face*& face) -> void {
-        if (!face) {return;}
-        int idx = &face - start;
-        painter.putLightPoint(model, *face, idx, inverseLight, viewFront);
+    BuffPoint* start = tBuffer;
+    BuffPoint* end = tBuffer + width * height;
+    QFuture<void> paintLoop = QtConcurrent::map(start, end, [&](BuffPoint& buffPoint) -> void {
+        if (!buffPoint.face) {return;}
+        painter.putLightPoint(model, *buffPoint.face, &buffPoint - start,
+                              buffPoint.x, buffPoint.y, inverseLight, viewFront);
     });
     paintLoop.waitForFinished();
 }
@@ -151,7 +151,7 @@ void Scene::createBuffers() {
     delete [] tBuffer;
     atomics = new QAtomicInt[width * height];
     zBuffer = new volatile int[width * height];
-    tBuffer = new Face*[width * height];
+    tBuffer = new BuffPoint[width * height];
 }
 
 void Scene::setLightSource(LightSource *lightSource) {

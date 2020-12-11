@@ -45,4 +45,11 @@ struct IdxVertex {
 typedef _Face<IdxVertex> IdxFace;
 
 
+struct BuffPoint {
+    Face* face;
+    float x;
+    float y;
+};
+
+
 #endif //GLPAINTER_TYPES_H

@@ -7,6 +7,13 @@ void processFaceIndexes(const QStringList &parseLine, QList<IdxFace> *idxFaces, 
 QString getMtlName(const QStringList& parseLine);
 void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mtlContext);
 
+
+float normalizeTexture(float f) {
+    // x.7 -> 0.7
+    // -x.7 -> 0.3
+    return f >= 0 ? f - floorf(f) : 1 - normalizeTexture(-f);
+}
+
 ObjModel *parseObjFile(const QString &modelDir, const QString &path, MtlContext &mtlContext) {
     Mtl* currentMtl = mtlContext.getDefMtl();
     auto *points = new QList<QVector3D>{};
@@ -28,7 +35,11 @@ ObjModel *parseObjFile(const QString &modelDir, const QString &path, MtlContext 
             } else if (list[0] == "vn") {
                 normals->append(getPoint(list).normalized());
             } else if (list[0] == "vt") {
-                textures->append(getPoint(list));
+                QVector3D texture = getPoint(list);
+                texture.setX(normalizeTexture(texture.x()));
+                texture.setY(normalizeTexture(texture.y()));
+                texture.setZ(normalizeTexture(texture.z()));
+                textures->append(texture);
             }
             else if (list[0] == 'f') {
                 processFaceIndexes(list, idxFaces, currentMtl);
@@ -40,6 +51,7 @@ ObjModel *parseObjFile(const QString &modelDir, const QString &path, MtlContext 
     }
     return new ObjModel(points, normals, textures, idxFaces);
 }
+
 
 void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mtlContext) {
     QMap<QString, Mtl*> mtls;

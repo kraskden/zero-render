@@ -15,7 +15,7 @@ private:
 
     QAtomicInt* atomics = nullptr;
     volatile int* zBuffer = nullptr;
-    Face** tBuffer = nullptr;
+    BuffPoint* tBuffer = nullptr;
 
     Model3D* model = nullptr;
 

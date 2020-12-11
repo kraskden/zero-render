@@ -48,14 +48,14 @@ Vec3i texel(const QImage &image, const QVector3D &pos) {
     float h = image.height();
 
     if (isnanf(pos.x()) || isnanf(pos.y())) {
-        //qDebug() << "Pos is nan";
+        qDebug() << "Pos is nan";
         //throw std::runtime_error("Pos is NaN");
         return QColorConstants::Red;
    }
 
     float tX = pos.x() * w;
     float tY = h - pos.y() * h;
-    if (tX < 0 || tY < 0 || tX > w || tY > h) {
+    if (tX < 0 || tY < 0 || tX > w - 1 || tY > h - 1) {
         return QColorConstants::Cyan;
     }
 
@@ -82,21 +82,22 @@ QVector3D toBarycentric3(const Face &face, float x, float y) {
 }
 
 QVector3D toBarycentric2D(const Face &face, float x, float y) {
-    const Vec3i& a = face[0].screen2D;
-    const Vec3i& b = face[1].screen2D;
-    const Vec3i& c = face[2].screen2D;
+    // TODO: vec4d is bullshit
+    const QVector4D& a = face[0].screen;
+    const QVector4D& b = face[1].screen;
+    const QVector4D& c = face[2].screen;
 
-    float reverseDet = 1.f / ((b.y - c.y) * (a.x - c.x)
-                            + (c.x - b.x) * (a.y - c.y));
+    float reverseDet = 1.f / ((b.y() - c.y()) * (a.x() - c.x())
+                            + (c.x() - b.x()) * (a.y() - c.y()));
 
-    float alpha = reverseDet * ((b.y - c.y) * (x - c.x) +
-                                (c.x - b.x) * (y - c.y));
-    float beta = reverseDet * ((c.y - a.y) * (x - c.x) +
-                               (a.x - c.x) * (y - c.y));
+    float alpha = reverseDet * ((b.y() - c.y()) * (x - c.x()) +
+                                (c.x() - b.x()) * (y - c.y()));
+    float beta = reverseDet * ((c.y() - a.y()) * (x - c.x()) +
+                               (a.x() - c.x()) * (y - c.y()));
     float gamma = 1 - alpha - beta;
 
     if (isnanf(alpha) || isnanf(beta) || isnanf(gamma)) {
-        qDebug() << "! " << alpha << beta << gamma << reverseDet;
+        // qDebug() << "! " << alpha << beta << gamma << reverseDet;
     }
     return QVector3D{alpha, beta, gamma};
 }

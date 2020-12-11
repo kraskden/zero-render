@@ -13,7 +13,7 @@
 #define SPECULAR_WEIGHT 0.4f
 
 /* Color constants */
-#define BACKGROUND_COLOR QColorConstants::Black
+#define BACKGROUND_COLOR QColorConstants::Blue
 #define DIFFUSE_DEF_COLOR QColorConstants::Red
 #define LIGHT_COLOR QColorConstants::White
 
