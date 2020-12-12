@@ -23,6 +23,8 @@ private:
     int width;
     int height;
 
+    bool isDebug = false;
+
     Camera* camera;
     LightSource* lightSource;
 
@@ -45,6 +47,8 @@ public:
     void setLightSource(LightSource *lightSource);
 
     void setModel(Model3D *model);
+
+    void toggleDebug() {isDebug = !isDebug; }
 
     ~Scene() override;
 

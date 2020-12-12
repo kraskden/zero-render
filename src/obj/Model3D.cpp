@@ -16,6 +16,7 @@ Model3D::Model3D(const QString& modelDir) {
 
     QString modelPath = fullPath(modelDir, settings.value("model", "model.obj").toString());
     float scale = settings.value("scale", 1.0).toFloat();
+    this->badMtl = settings.value("badMtl", false).toBool();
 
     if (!QFile::exists(modelPath)) {
         qDebug() << "Model file " + modelPath + " not exists!";
@@ -39,5 +40,11 @@ void Model3D::loadDefMtl(const QString& modelDir, const QSettings &settings) {
     defMtl->normalImage = QImage{normalPath};
     defMtl->emissionImage = QImage{emissionPath};
 
-    // TODO: light coeffs
+    defMtl->diffuseColor = DIFFUSE_DEF_COLOR;
+    defMtl->specularColor = LIGHT_COLOR;
+    defMtl->specularExp = SPECULAR_POWER;
+}
+
+bool Model3D::isTextureSearch() {
+    return this->badMtl;
 }

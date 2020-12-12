@@ -34,7 +34,7 @@ void Scene::repaint(QPainter *qPainter) {
     paintModel(model);
 
     qPainter->drawImage(0, 0, world);
-    debugPrint(qPainter);
+    if (isDebug) debugPrint(qPainter);
 }
 
 void Scene::setWidth(int width) {

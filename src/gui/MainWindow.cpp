@@ -21,10 +21,6 @@ MainWindow::MainWindow(QWindow *parent) :
         m_backingStore(new QBackingStore(this)),
         scene(new Scene(width(), height(), this))
 {
-    // TODO: time duration for better camera moving
-
-    scene->setModel(new Model3D("../resources/Ship"));
-
     camera = new Camera(QVector3D(0, 0, DEF_CAMERA_Z), DEF_CAMERA_YAW, DEF_CAMERA_PITCH,
                               DEF_MOVE_SPEED, DEF_ROTATE_SPEED, this);
     scene->setCamera(camera);
@@ -123,6 +119,7 @@ void MainWindow::initHandlers() {
     controlHandlers.insert(Qt::Key_Shift, [this]() -> void{lightSource->reset(LIGHT_RADIUS, 0, 0);});
 
     controlHandlers.insert(Qt::Key_F2, [this]() -> void{this->loadModel();});
+    controlHandlers.insert(Qt::Key_F1, [this]() -> void {this->scene->toggleDebug(); });
 }
 
 void MainWindow::onUpdateTimer() {

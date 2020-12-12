@@ -9,6 +9,8 @@ public:
     virtual Mtl* getDefMtl() = 0;
     virtual void addMtls(const QMap<QString, Mtl*>& data) = 0;
     virtual Mtl* getMtl(const QString& name) = 0;
+
+    virtual bool isTextureSearch() = 0;
 };
 
 #endif //GLPAINTER_MTLCONTEXT_H

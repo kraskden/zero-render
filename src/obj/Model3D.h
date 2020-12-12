@@ -11,6 +11,7 @@
 class Model3D : public MtlContext {
     ObjModel* objModel = nullptr;
     QMatrix4x4 worldMatrix;
+    bool badMtl = false;
 
     QMap<QString, Mtl*> mtls;
     Mtl* defMtl;
@@ -31,6 +32,8 @@ public:
     Mtl* getDefMtl() override {return defMtl; }
     void addMtls(const QMap<QString, Mtl*>& data) override {mtls.insert(data); }
     Mtl* getMtl(const QString& name) override {return mtls.value(name, defMtl); }
+
+    bool isTextureSearch() override;
 
     ~Model3D() {
         delete objModel;

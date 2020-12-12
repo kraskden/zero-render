@@ -14,8 +14,9 @@ struct Mtl {
     QImage specularImage;
     QImage emissionImage;
 
-    Vec3i ambientColor;
     Vec3i diffuseColor;
+    Vec3i specularColor;
+    float specularExp;
 };
 
 template<typename T>
@@ -30,8 +31,8 @@ struct Vertex {
     const QVector3D* point;
     const QVector3D* normal;
     const QVector3D* texture;
-    QVector4D screen;
     Vec3i screen2D;
+    QVector4D screen;
 };
 
 typedef _Face<Vertex> Face;

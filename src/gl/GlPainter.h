@@ -20,12 +20,7 @@ class GlPainter {
 public:
     explicit GlPainter(QImage* world, QAtomicInt *atomics, volatile int *zBuffer, BuffPoint *tBuffer, int width, int height);
 
-    void asyncLine(int x1, int y1, int x2, int y2, QRgb color);
-    void asyncTriangle(Vec3i t0, Vec3i t1, Vec3i t2, float intensity);
-
-    void fillTBuffer(Face* face, Vec3i p0, Vec3i p1, Vec3i p2);
-    void fillTBuffer2(Face* face, Vec3i t0, Vec3i t1, Vec3i t2);
-    void putPoint(int idx);
+    void fillTBuffer(Face* face, const Vec3i &t0, const Vec3i &t1, const Vec3i &t2);
 
     void putLightPoint(const Model3D *model, const Face &face, int px, const QVector3D &bar,
                        const QVector3D &inverseLight, const QVector3D &viewFront);
