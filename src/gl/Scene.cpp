@@ -160,4 +160,5 @@ void Scene::setLightSource(LightSource *lightSource) {
 void Scene::setModel(Model3D *model) {
     delete this->model;
     this->model = model;
+    qDebug() << "New model loaded";
 }

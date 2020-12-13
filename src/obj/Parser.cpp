@@ -68,7 +68,6 @@ void addMtl(const QString &modelDir, Mtl *mtl, QMap<QString, Mtl *> &mtls, const
     mtl->diffuseColor = content.Kd ? mtl->diffuseColor : DIFFUSE_DEF_COLOR;
     mtl->specularColor = content.Ks ? mtl->specularColor : LIGHT_COLOR;
     if (mtl->diffuseImage.isNull() && content.textureSearch) {
-        qDebug() << "Bad mtl detected...";
         // Try to search image in textures folder
         QStringList names = {mtl->name, mtl->name.toLower(), mtl->name.toUpper()};
         for (QString& name : names) {
@@ -83,7 +82,7 @@ void addMtl(const QString &modelDir, Mtl *mtl, QMap<QString, Mtl *> &mtls, const
                 }
             }
         }
-
+        qWarning() << "Cannot found texture for mtl:" << mtl->name;
     }
     mtls.insert(mtl->name, mtl);
 }
@@ -100,6 +99,7 @@ void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mt
 
     Mtl* current = nullptr;
     MtlContent content;
+    const QSettings& settings = *(mtlContext.getSettings());
     content.textureSearch = mtlContext.isTextureSearch();
 
     while (!in.atEnd()) {
@@ -116,6 +116,8 @@ void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mt
             current->specularImage = QImage{modelDir + "/" + list[1]};
         } else if (list[0] == "map_Ke" && current) {
             current->emissionImage = QImage{modelDir + "/" + list[1]};
+        } else if (list[0] == "map_Bump" && current && settings.value("normal", false).toBool()) {
+            current->normalImage = QImage{modelDir + "/" + list[1]};
         } else if (list[0] == "Ns" && current) {
             content.Ns = true;
             current->specularExp = list[1].toFloat();

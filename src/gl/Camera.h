@@ -44,7 +44,8 @@ public:
 public:
     void move(CamMov movement, CamSide direction);
 
-    void incMovementSpeed(float delta) {movementSpeed += delta; }
+    void incMoveSpeed(float delta) { movementSpeed += delta; }
+    void mulMoveSpeed(float factor) {movementSpeed *= factor; }
     void incRotateSpeed(float delta) {rotateSpeed += delta;}
 
     QMatrix4x4 getViewMatrix() {

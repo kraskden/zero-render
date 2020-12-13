@@ -4,6 +4,7 @@
 #include <QtGui/QWindow>
 #include "../gl/Scene.h"
 #include "../gl/LightSource.h"
+#include "../common/const.h"
 #include <QSet>
 #include <QMap>
 #include <QTimer>
@@ -22,6 +23,8 @@ class MainWindow : public  QWindow
     Camera* camera;
     LightSource* lightSource;
     QTimer* updateTimer;
+
+    QString currModel;
 
     QMap<KeyCode, std::function<void()>> moveHandlers;
     QMap<int, std::function<void()>> controlHandlers;

@@ -19,12 +19,6 @@ class Model3D : public MtlContext {
 public:
     explicit Model3D(const QString& modelDir);
 
-    Model3D(ObjModel* objModel, QMatrix4x4 worldMatrix) {
-        this->objModel = objModel;
-        this->worldMatrix = worldMatrix;
-    }
-
-
     QList<Face>& getFaces() const {return objModel->getFaces(); }
     const QMatrix4x4& getWorldMatrix() const {return worldMatrix;}
     const ObjModel* obj() const {return objModel;}
@@ -35,7 +29,7 @@ public:
 
     bool isTextureSearch() override;
 
-    ~Model3D() {
+    ~Model3D() override {
         delete objModel;
         delete defMtl;
         qDeleteAll(mtls);

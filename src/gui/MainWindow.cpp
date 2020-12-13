@@ -111,15 +111,18 @@ void MainWindow::initHandlers() {
     moveHandlers.insert(key2code(XK_Up), [this]() -> void {lightSource->changeAltitude(1); });
     moveHandlers.insert(key2code(XK_Down), [this]() -> void {lightSource->changeAltitude(-1); });
 
-    controlHandlers.insert(Qt::Key_Q, [this]() -> void {camera->incMovementSpeed(-DELTA_MOVE_SPEED);});
-    controlHandlers.insert(Qt::Key_E, [this]() -> void {camera->incMovementSpeed(DELTA_MOVE_SPEED);});
+    controlHandlers.insert(Qt::Key_Q, [this]() -> void { camera->incMoveSpeed(DELTA_MOVE_SPEED);});
+    controlHandlers.insert(Qt::Key_E, [this]() -> void { camera->incMoveSpeed(DELTA_MOVE_SPEED);});
     controlHandlers.insert(Qt::Key_I, [this]() -> void {camera->incRotateSpeed(-DELTA_ROTATE_SPEED);});
+    controlHandlers.insert(Qt::Key_BracketLeft, [this]() -> void {camera->mulMoveSpeed(FACTOR_MOVE_SPEED);});
+    controlHandlers.insert(Qt::Key_BracketRight, [this]() -> void {camera->mulMoveSpeed(1 + FACTOR_MOVE_SPEED);});
     controlHandlers.insert(Qt::Key_P, [this]() -> void {camera->incRotateSpeed(DELTA_ROTATE_SPEED);});
     controlHandlers.insert(Qt::Key_R, [this]() -> void {camera->reset(QVector3D{0, 0, DEF_CAMERA_Z}, DEF_CAMERA_YAW, DEF_CAMERA_PITCH);});
     controlHandlers.insert(Qt::Key_Shift, [this]() -> void{lightSource->reset(LIGHT_RADIUS, 0, 0);});
 
     controlHandlers.insert(Qt::Key_F2, [this]() -> void{this->loadModel();});
     controlHandlers.insert(Qt::Key_F1, [this]() -> void {this->scene->toggleDebug(); });
+    controlHandlers.insert(Qt::Key_F5, [this]() -> void {this->scene->setModel(new Model3D(currModel));});
 }
 
 void MainWindow::onUpdateTimer() {
@@ -138,7 +141,10 @@ void MainWindow::onUpdateTimer() {
 }
 
 void MainWindow::loadModel() {
-    QString modelDir =  QFileDialog::getExistingDirectory(nullptr, "Open model directory",
+    QString model =  QFileDialog::getExistingDirectory(nullptr, "Open model directory",
                                                           "../resources");
-    scene->setModel(new Model3D(modelDir));
+    if (model != "") {
+        currModel = model;
+        scene->setModel(new Model3D(currModel));
+    }
 }

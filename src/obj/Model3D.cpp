@@ -12,18 +12,18 @@ QString fullPath(const QString& dir, const QString& fileName) {
 }
 
 Model3D::Model3D(const QString& modelDir) {
-    QSettings settings{modelDir + "/" + MODEL_SETTING_FILE, QSettings::Format::IniFormat};
+    settings = new QSettings{modelDir + "/" + MODEL_SETTING_FILE, QSettings::Format::IniFormat};
 
-    QString modelPath = fullPath(modelDir, settings.value("model", "model.obj").toString());
-    float scale = settings.value("scale", 1.0).toFloat();
-    this->badMtl = settings.value("badMtl", false).toBool();
+    QString modelPath = fullPath(modelDir, settings->value("model", "model.obj").toString());
+    float scale = settings->value("scale", 1.0).toFloat();
+    this->badMtl = settings->value("badMtl", false).toBool();
 
     if (!QFile::exists(modelPath)) {
         qDebug() << "Model file " + modelPath + " not exists!";
         return;
     }
 
-    loadDefMtl(modelDir, settings);
+    loadDefMtl(modelDir, *settings);
     this->worldMatrix = matrix::scale({scale, scale, scale});
     this->objModel = parseObjFile(modelDir, modelPath, *this);
 }
