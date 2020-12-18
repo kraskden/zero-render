@@ -25,10 +25,11 @@ void GlPainter::fillTBuffer(Face *face, const Vec3i &t0, const Vec3i &t1, const 
 
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j <= maxY; ++j) {
-            if (i >= width || i < 0 || j > height || j < 0) {
+            if (i >= width || i < 0 || j >= height || j < 0) {
                 continue;
             }
-            bp.bar = toBarycentric2D(*face, i, j);
+            bp.bar = toBar(*face, i, j);
+//            bp.bar = toBarycentric2D(*face, i, j);
             const QVector3D& bar = bp.bar;
             if (bar.x() < 0 || bar.y() < 0 || bar.z() < 0) {
                 continue;
@@ -70,13 +71,18 @@ void GlPainter::putLightPoint(const Model3D *model, const Face &face, int px, co
                          bar.z() / face[2].screen.w()};
     bc_clip = bc_clip / (bc_clip.x() + bc_clip.y() + bc_clip.z());
 
+    if (bc_clip.x() < 0 || bc_clip.y() < 0 || bc_clip.z() < 0 ||
+        bc_clip.x() > 1 || bc_clip.y() > 1 || bc_clip.z() > 1) {
+        return;
+    }
+
     QVector3D t = (tA * bc_clip.x() + tB * bc_clip.y() + tC * bc_clip.z());
 
     Vec3i diffuseColor = !diffuseImage.isNull() ? texel(diffuseImage, t) : mtl->diffuseColor;
 
     Vec3i emissionColor = !emissionImage.isNull() ? texel(emissionImage, t) : Vec3i{0, 0, 0};
 
-    Vec3i lightColor = mtl->specularColor;
+    Vec3i lightColor = !specularImage.isNull() ? texel(specularImage, t) :  mtl->specularColor;
 
     Vec3i ambient = diffuseColor * AMBIENT_WEIGHT;
 

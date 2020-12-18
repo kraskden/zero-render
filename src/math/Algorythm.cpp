@@ -14,27 +14,22 @@ Vec3i texel(const QImage &image, const QVector3D &pos) {
 
     float x = std::min(pos.x() * w, w - 1);
     float y = std::min(h * (1 - pos.y()), h - 1);
+    if (x < 0 || y < 0) {
+        //qDebug() << pos;
+    }
     return QColor::fromRgb(image.pixel((int)x, (int)y));
 }
 
-
-QVector3D toBarycentric2D(const Face &face, float x, float y) {
-    const QVector4D& a = face[0].screen;
-    const QVector4D& b = face[1].screen;
-    const QVector4D& c = face[2].screen;
-
-    float reverseDet = 1.f / ((b.y() - c.y()) * (a.x() - c.x())
-                            + (c.x() - b.x()) * (a.y() - c.y()));
-
-    if (isnanf(reverseDet)) {
-        return {-1, -1, -1};
+QVector3D toBar(const Face &face, float x, float y) {
+//    Vec3 n = new Vec3(v3.x - v1.x, v2.x - v1.x, v1.x - p.x)
+//    .cross(new Vec3(v3.y - v1.y, v2.y - v1.y, v1.y - p.y));
+    const QVector4D& v1 = face[0].screen;
+    const QVector4D& v2 = face[1].screen;
+    const QVector4D& v3 = face[2].screen;
+    QVector3D n = QVector3D::crossProduct({v3.x() - v1.x(), v2.x() - v1.x(), v1.x() - x},
+                                          {v3.y() - v1.y(), v2.y() - v1.y(), v1.y() - y});
+    if (abs(n.z()) > 1e-3) {
+        return QVector3D{1.f - (n.x() + n.y()) / n.z(), n.y() / n.z(), n.x() / n.z()};
     }
-
-    float alpha = reverseDet * ((b.y() - c.y()) * (x - c.x()) +
-                                (c.x() - b.x()) * (y - c.y()));
-    float beta = reverseDet * ((c.y() - a.y()) * (x - c.x()) +
-                               (a.x() - c.x()) * (y - c.y()));
-    float gamma = 1 - alpha - beta;
-
-    return QVector3D{alpha, beta, gamma};
+    return QVector3D{-1, -1, -1};
 }

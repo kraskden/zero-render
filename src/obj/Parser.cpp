@@ -112,10 +112,19 @@ void loadMtlLibrary(const QString &modelDir, const QString &path, MtlContext &mt
             current->name = list[1];
         } else if (list[0] == "map_Kd" && current) {
             current->diffuseImage = QImage{modelDir + "/" + list[1]};
+            if (current->diffuseImage.isNull()) {
+                qDebug() << "Diffuse image" << list[1] << "not loaded";
+            }
         } else if (list[0] == "map_Ks" && current) {
             current->specularImage = QImage{modelDir + "/" + list[1]};
+            if (current->specularImage.isNull()) {
+                qDebug() << "Specular image" << list[1] << "not loaded";
+            }
         } else if (list[0] == "map_Ke" && current) {
             current->emissionImage = QImage{modelDir + "/" + list[1]};
+            if (current->emissionImage.isNull()) {
+                qDebug() << "Emission image" << list[1] << "not loaded";
+            }
         } else if (list[0] == "map_Bump" && current && settings.value("normal", false).toBool()) {
             current->normalImage = QImage{modelDir + "/" + list[1]};
         } else if (list[0] == "Ns" && current) {

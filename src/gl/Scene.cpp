@@ -60,6 +60,10 @@ bool is_vec_drop(const QVector4D& vec) {
     return (abs(vec.x()) > w) || (abs(vec.y()) > w) || (abs(vec.z()) > w);
 }
 
+int bool2int(bool b) {
+    return b ? 1 : 0;
+}
+
 void Scene::paintModel(Model3D *model) {
     QMatrix4x4 viewport = matrix::viewport(width, height);
     QMatrix4x4 view = camera->getViewMatrix();
@@ -71,11 +75,17 @@ void Scene::paintModel(Model3D *model) {
     QVector3D viewFront = camera->getFront().normalized();
 
     QList<Face>& faces = model->getFaces();
+
     QFuture<void> computeLoop = QtConcurrent::map(faces.begin(), faces.end(), [&](Face& face) -> void {
+        QVector4D pj[3];
         for (int i = 0 ; i < 3; ++i) {
-            QVector4D proj = projectionView * QVector4D(*face[i].point, 1);
-            if (is_vec_drop(proj)) return;
-            face[i].screen = viewport * proj;
+            pj[i] = projectionView * QVector4D(*face[i].point, 1);
+        }
+        if (is_vec_drop(pj[0]) && is_vec_drop(pj[1]) && is_vec_drop(pj[2])) {
+            return;
+        }
+        for (int i = 0; i < 3; ++i) {
+            face[i].screen = viewport * pj[i];
             norm_vec(face[i].screen);
             face[i].screen2D = face[i].screen.toVector3D();
         }
